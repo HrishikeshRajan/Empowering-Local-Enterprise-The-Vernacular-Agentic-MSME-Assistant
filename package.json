@@ -1,0 +1,23 @@
+{
+  "name": "vernacular-agentic-msme-assistant-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vernacular Agentic MSME Assistant - Monorepo with Autonomous Reflection Loop, Multilingual Whisper Voice, and Cloudflare/Meta WhatsApp integration",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "start:backend": "npm run start --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

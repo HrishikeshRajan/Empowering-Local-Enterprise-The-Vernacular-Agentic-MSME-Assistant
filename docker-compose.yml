@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://msme_user:msme_password@postgres:5432/msme_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - msme-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://backend:3001/api
+    depends_on:
+      - backend
+    networks:
+      - msme-network
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: msme_user
+      POSTGRES_PASSWORD: msme_password
+      POSTGRES_DB: msme_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U msme_user -d msme_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - msme-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - msme-network
+
+  uptime:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    volumes:
+      - uptime_data:/app/data
+    networks:
+      - msme-network
+
+networks:
+  msme-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  uptime_data:

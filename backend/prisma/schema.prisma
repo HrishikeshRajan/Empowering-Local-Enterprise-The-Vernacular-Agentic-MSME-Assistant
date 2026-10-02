@@ -1,0 +1,220 @@
+// Prisma Schema for Vernacular Agentic MSME Assistant
+// Supports PostgreSQL + pgvector for semantic search and business context retrieval
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+enum Role {
+  MERCHANT
+  STAFF
+  ADMIN
+}
+
+enum TaskStatus {
+  SUCCESS
+  FLAGGED
+  FAILED
+  PENDING
+}
+
+enum InputType {
+  VOICE
+  TEXT
+  WEBHOOK
+}
+
+enum InvoiceStatus {
+  VERIFIED
+  FLAGGED
+  PENDING
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model BusinessProfile {
+  id                  String   @id @default(uuid())
+  businessName        String
+  businessNameMl      String?
+  ownerName           String
+  ownerNameMl         String?
+  gstin               String?  @unique
+  phone               String   @unique
+  email               String?
+  address             String?
+  upiId               String?
+  primaryLanguage     String   @default("ml") // ml = Malayalam, en = English
+  notifyWhatsapp      Boolean  @default(true)
+  notifyLowStock      Boolean  @default(true)
+  autoInvoiceSync     Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  inventories         InventoryItem[]
+  invoices            Invoice[]
+  appointments        Appointment[]
+  conversations       WhatsAppConversation[]
+  taskLogs            AgentTaskLog[]
+  embeddings          BusinessEmbedding[]
+}
+
+model InventoryItem {
+  id              String          @id @default(uuid())
+  businessId      String
+  business        BusinessProfile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  nameMl          String
+  category        String
+  categoryMl      String
+  currentStock    Float           @default(0)
+  unit            String          @default("kg")
+  reorderLevel    Float           @default(10)
+  unitPrice       Float           @default(0)
+  costPrice       Float           @default(0)
+  hsnCode         String?
+  lastRestocked   DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  invoiceItems    InvoiceItem[]
+}
+
+model Invoice {
+  id               String          @id @default(uuid())
+  businessId       String
+  business         BusinessProfile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoiceNo        String
+  date             DateTime        @default(now())
+  vendorName       String
+  vendorNameMl     String?
+  vendorGstin      String?
+  vendorAddress    String?
+  buyerName        String?
+  buyerGstin       String?
+  subTotal         Float
+  cgst             Float           @default(0)
+  sgst             Float           @default(0)
+  grandTotal       Float
+  status           InvoiceStatus   @default(PENDING)
+  guardrailsPassed Boolean         @default(true)
+  varianceAmount   Float           @default(0)
+  imageUrl         String?
+  parsedRawJson    Json?
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  items            InvoiceItem[]
+}
+
+model InvoiceItem {
+  id              String         @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  name            String
+  nameMl          String?
+  hsn             String?
+  qty             String
+  unit            String         @default("kg")
+  rate            Float
+  amount          Float
+  confidence      Float          @default(95.0)
+  createdAt       DateTime       @default(now())
+}
+
+model WhatsAppConversation {
+  id              String            @id @default(uuid())
+  businessId      String
+  business        BusinessProfile   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName    String
+  customerPhone   String
+  location        String?
+  unreadCount     Int               @default(0)
+  isSessionActive Boolean           @default(true)
+  lastMessageAt   DateTime          @default(now())
+  sessionExpiresAt DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  messages        WhatsAppMessage[]
+
+  @@unique([businessId, customerPhone])
+}
+
+model WhatsAppMessage {
+  id             String               @id @default(uuid())
+  conversationId String
+  conversation   WhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         String               // 'customer' | 'agent' | 'merchant'
+  text           String
+  textMl         String?
+  isVoiceNote    Boolean              @default(false)
+  voiceDuration  String?
+  status         String               @default("sent") // 'sent' | 'delivered' | 'read'
+  hasPaymentLink Boolean              @default(false)
+  paymentAmount  Float?
+  rawPayload     Json?
+  timestamp      DateTime             @default(now())
+}
+
+model Appointment {
+  id           String            @id @default(uuid())
+  businessId   String
+  business     BusinessProfile   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName String
+  phone        String
+  service      String
+  serviceMl    String?
+  date         String
+  timeSlot     String
+  status       AppointmentStatus @default(CONFIRMED)
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model AgentTaskLog {
+  id              String            @id @default(uuid())
+  businessId      String
+  business        BusinessProfile   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  inputPrompt     String
+  inputPromptMl   String?
+  inputType       InputType         @default(VOICE)
+  language        String            @default("ml")
+  toolUsed        String
+  status          TaskStatus        @default(SUCCESS)
+  confidence      Float
+  executionTimeMs Int
+  outputSummary   String
+  outputSummaryMl String?
+  needsHumanReview Boolean          @default(false)
+  reviewReason    String?
+  steps           Json              // Array of AgentExecutionStep
+  timestamp       DateTime          @default(now())
+}
+
+// Vector search table for business context (pgvector extension)
+model BusinessEmbedding {
+  id         String                               @id @default(uuid())
+  businessId String
+  business   BusinessProfile                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  content    String
+  metadata   Json?
+  // 768-dim embedding for Gemini/text-embedding-004
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime                             @default(now())
+}
