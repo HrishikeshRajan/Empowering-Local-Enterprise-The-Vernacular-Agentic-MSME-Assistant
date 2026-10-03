@@ -145,6 +145,142 @@ Kada is handling messagesYou are in control. New messages wait for you.
 
 ✓Replied to a price question*Done*
 
+---
+
+# Kada Merchant App: Dashboard & Operations Screens
+
+The complete mobile screen architecture and text specifications for the Kada merchant application.
+
+### Persistent App Shell & Navigation
+[Kada](#home) [Home](#home) [Inbox](#inbox) [Bills](#bills) [Activity](#activity) [Setup](#setup)
+
+[A] **Anitha's Tailoring** · Sample shop  
+[Kada](#home) · [A](#setup)
+
+---
+
+### Screen 1: Home Cockpit (`#home`)
+
+നമസ്കാരം, അനിത
+
+# Good morning, Anitha
+
+Here is what Kada handled for you today.
+
+**Kada is handling messages**  
+*Switch off to take control yourself.* (Toggle: Autonomous Active / Manual Override)
+
+#### Daily Metrics
+- **12** Bookings
+- **5** Bills read
+- **38** Chats handled
+- **2** Need you
+
+#### Needs you (High-Priority Triage)
+- [! **Bulk order from Rahul** · 40 uniforms by the 15th · 10:42](#inbox)
+- [! **Rice stock is low** · 20 kg left, reorder drafted · 09:05](#activity)
+
+#### Today's Bookings
+- **10:30** **Suresh, 2 people** · Fitting, moved to 10:30 · `Booked`
+- **4:00 pm** **Meera** · Blouse fitting, 4:00 pm · `Booked`
+
+*Sample data for illustration.*
+
+---
+
+### Screen 2: WhatsApp Inbox (`#inbox`)
+
+WhatsApp
+
+# Inbox
+
+Every customer message in one place.
+
+Select a chat to see the conversation.
+
+- **Rahul (Uniform Enquiry)** · `10:42` · *Need 40 sets school uniform by 15th* · `! Needs you`
+- **Meera** · `10:20` · *Blouse stitching pricing sent* · `✓ Auto-replied`
+- **Suresh** · `09:50` · *Fitting confirmed for 2 people at 10:30* · `✓ Booked`
+
+---
+
+### Screen 3: Bill Reader (`#bills`)
+
+Bill reader
+
+# Bills
+
+Photograph a bill. Kada saves tidy records.
+
+- **Capture Bill**: Tap camera button to photograph a paper invoice.
+- **Latest Record**:
+  - **Sree Lakshmi Traders**, Alappuzha · `02-10-2026`
+  - Rice 50 kg: ₹2,400 | Sugar 25 kg: ₹1,100 | Oil 10 L: ₹1,320
+  - Total: ₹4,820 · `✓ Balanced`
+
+---
+
+### Screen 4: Autonomous Activity Log (`#activity`)
+
+Agent log
+
+# Activity
+
+What Kada did, in plain words.
+
+- ! **Bulk order enquiry from Rahul** · Lead alert sent to you · `10:42`
+- ✓ **Replied to a price question** · Meera, blouse stitching · `10:20`
+- ✓ **Booked fitting for 2** · Tap to see the checks · `09:50`
+  - *Draft the booking*
+  - *Check free slots*
+  - *Review: clash found at 10:00*
+  - *Fix: moved to 10:30*
+- ✓ **Read a supplier bill** · Sree Lakshmi Traders, 4,820 · `09:30`
+- ! **Rice stock is low** · Reorder drafted, waiting for you · `09:05`
+
+---
+
+### Screen 5: Getting Started Wizard (`#setup`)
+
+Getting started
+
+# Live in 2 minutes
+
+Step 1 of 4
+
+### Name your shop
+Business name: *Anitha's Tailoring*
+
+### Set your hours
+Opening time · Closing time: *9:00 AM – 8:00 PM*
+
+### Add your first service
+Name · Price (rupees): *Blouse Stitching · ₹350*
+
+### Send a voice note
+Tap and say something in Malayalam: *(🎙️) "നാളെ 10 മണിക്ക് മീരയുടെ ബ്ലൗസ് ഫിറ്റിംഗ്"*  
+`✓ Verified`
+
+### You are live
+Kada is ready to take your customers.
+
+[Go to home](#home)
+
+---
+
+### Screen 6: Live Voice Assistant Overlay (`#listening`)
+
+### Listening
+
+Live vernacular speech recognition and instant intent resolution:
+- Spoken: *"നാളെ വൈകുന്നേരം നാലുമണിക്ക് മീരയ്ക്ക് ബ്ലൗസ് ഫിറ്റിംഗ് ബുക്ക് ചെയ്യുക"*
+- Action: **Booking saved: Meera, tomorrow 4:00 pm ✓**
+
+---
+
+### Mobile Bottom Dock
+[Home](#home) [Inbox](#inbox) [Bills](#bills) [Activity](#activity)
+
 Getting started
 
 ## Live in 2 minutes.

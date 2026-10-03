@@ -131,7 +131,7 @@ Rules: one H1 per page. Headings are short and plain. Max line length is about 3
 |---|---|
 | **Primary button** | Pill, `--accent` fill, white text, 48px min height, 1rem / 500. Hover: `--accent-d` |
 | **Ghost button** | Pill, white 70% fill, 1px `--line` border, `--ink` text, no shadow |
-| **Bottom dock (mobile)** | Single primary button fixed to the bottom. Hidden until the user scrolls past the hero |
+| **Bottom dock (mobile)** | 4-tab thumb navigation (Home, Inbox, Bills, Activity) or single primary button fixed to bottom with `env(safe-area-inset-bottom)`. Height 64px, `--surface` background, 1px `--line` border |
 | **Card** | White at 85 to 92% opacity, 1px `--line`, radius 1.3rem, card shadow. The "soft" variant uses `rgba(227,239,231,.9)` |
 | **Icon tile** | 2.7rem square, radius .9rem, `--soft` fill, line icon in `--accent-d`, 1.7px stroke, round caps. Icons are 18 to 22px |
 | **Phone mockup** | White 85% shell, 1px `--line`, padding .55rem, screen in `--tint`. Hero phone has a **fixed height of 480px** with hidden overflow so content never changes the layout |
@@ -141,13 +141,21 @@ Rules: one H1 per page. Headings are short and plain. Max line length is about 3
 | **Tabs** | Pill group in white with a 1px border. Selected tab: `--soft` fill and `--accent-d` text |
 | **Check row** | 1.3rem circle. Green fill with a tick for done, amber fill with "!" for needs attention |
 | **Badges** | "Done": `--soft` and `--accent-d`. "Needs you": `#f6ecd3` and `#8a5f0f`. Pill, .75rem, 600 |
-| **Switch** | 3.4 by 2rem track, `--accent` when on, white knob |
+| **Switch** | 3.4 by 2rem track, `--accent` when on, white knob. Toggles between autonomous handling and manual merchant control |
 | **Workflow node** | White card, radius 1rem, 1px `--line`, soft shadow, icon tile plus title and subtitle. Active state as in the palette section |
 | **Eyebrow** | Small uppercase accent label above every section H2 |
+| **Stat Tile (KPI Card)** | `--surface` background, 1px `--line`, radius 1.2rem, card shadow. Large numeral (Newsreader/Grotesk 700, 2rem, `--ink`), label (`--muted`, .85rem, 500) |
+| **Triage Alert Card** | High-priority item needing merchant review. Background `#f6ecd3`, 1px border `#c58a1f`, radius 1.1rem, amber `!` badge, title in bold `--ink`, timestamp in `--muted` |
+| **Booking Row** | Schedule item with time badge (`--soft` background, `--accent-d` text), customer name and service caption, status pill ("Booked" in `--soft`/`--accent-d`) |
+| **Reflection Trace Tree** | Vertical step-by-step disclosure showing autonomous checks (Draft -> Check slots -> Review clash -> Auto-fix). 1px vertical connecting line |
+| **Onboarding Stepper** | Step X of 4 progress indicator, clean form fields (48px height, 1px `--line`), mic calibration button with affirmative `✓` confirmation |
+| **Voice Listening Overlay** | Ambient pulsing green aura (`#c4e8d3`), live Malayalam speech transcription in Noto Sans Malayalam, instant confirmation toast |
 
 ---
 
-## 5. Page structure (in order)
+## 5. Screen & Page Architectures
+
+### 5.A Landing Page structure (in order)
 
 1. **Intro splash** (about 3s): logo mark, "Kada" letters, Malayalam "കട", a short count-up bar, then a curtain slides up.
 2. **Hero**: Malayalam hook, large headline, one-line value, live activity line, two buttons, animated phone demo that loops through Voice note, Bill and WhatsApp.
@@ -158,6 +166,54 @@ Rules: one H1 per page. Headings are short and plain. Max line length is about 3
 7. **Getting started**: four steps with a progress bar.
 8. **Tech stack**: small chips (a single swipeable row on mobile).
 9. **Closing banner and footer.**
+
+### 5.B App Dashboard & Operations Screens (in order)
+
+Designed mobile-first (375px viewport) for one-handed operation in local retail/tailoring shops:
+
+1. **Global App Shell & Navigation**
+   * Top bar: Brand `[ കട / Kada ]`, shop avatar `[A]`, shop name **Anitha's Tailoring**, *Sample shop* tag, and setup trigger `[A](#setup)`.
+   * Bottom dock: Persistent 4-tab thumb bar: `[Home](#home)`, `[Inbox](#inbox)`, `[Bills](#bills)`, `[Activity](#activity)`.
+2. **Screen 1: Home Cockpit (`#home`)**
+   * Malayalam salutation: `നമസ്കാരം, അനിത` (Noto Sans Malayalam, `--accent-d`).
+   * H1 Headline: `Good morning, Anitha` (Newsreader 500, 2rem).
+   * Daily status: `Here is what Kada handled for you today.`
+   * Autonomous mode switch: `Kada is handling messages` / `Switch off to take control yourself.`
+   * 4 KPI Stat Tiles: `12 Bookings`, `5 Bills read`, `38 Chats handled`, `2 Need you`.
+   * "Needs you" Triage Feed: `! Bulk order from Rahul (10:42)` -> links to `#inbox`, `! Rice stock is low (09:05)` -> links to `#activity`.
+   * Today's Bookings Feed: `10:30 Suresh, 2 people` (Fitting, moved to 10:30), `4:00 pm Meera` (Blouse fitting). Both marked `Booked`.
+   * Footer caption: `Sample data for illustration.`
+3. **Screen 2: WhatsApp Inbox (`#inbox`)**
+   * Eyebrow `WhatsApp`, H1 `# Inbox`.
+   * Description: `Every customer message in one place. Select a chat to see the conversation.`
+   * Customer threads with lead badges (`! Needs you` vs `✓ Auto-replied`).
+   * One-tap manual takeover toggle.
+4. **Screen 3: Bill Reader (`#bills`)**
+   * Eyebrow `Bill reader`, H1 `# Bills`.
+   * Description: `Photograph a bill. Kada saves tidy records.`
+   * Primary camera snap / photo upload button (min 48px).
+   * Structured invoice record (e.g. Sree Lakshmi Traders, Alappuzha, 3 line items, math reconciliation: `total_matches_items: true`).
+5. **Screen 4: Autonomous Activity Log (`#activity`)**
+   * Eyebrow `Agent log`, H1 `# Activity`.
+   * Description: `What Kada did, in plain words.`
+   * Chronological event timeline with status icons (`!` for alerts, `✓` for completed jobs).
+   * Expandable Reflection Loop Tree on bookings:
+     * 1. Draft the booking
+     * 2. Check free slots
+     * 3. Review: clash found at 10:00
+     * 4. Fix: moved to 10:30
+6. **Screen 5: Getting Started Wizard (`#setup`)**
+   * Eyebrow `Getting started`, H1 `# Live in 2 minutes`.
+   * Stepper: Step 1 of 4.
+   * Step 1: `Name your shop` (Business name input).
+   * Step 2: `Set your hours` (Opening & closing time).
+   * Step 3: `Add your first service` (Name & price in rupees).
+   * Step 4: `Send a voice note` (Vernacular speech test: "Tap and say something in Malayalam" -> `✓`).
+   * Live completion: `### You are live. Kada is ready to take your customers.` -> `[Go to home](#home)`.
+7. **Screen 6: Live Voice Assistant Overlay (`#listening`)**
+   * Ambient pulsing aura.
+   * State: `### Listening`.
+   * Vernacular transcript display and instant confirmation toast: `Booking saved: Meera, tomorrow 4:00 pm ✓`.
 
 ---
 
@@ -207,6 +263,9 @@ Mobile performance rules: no `backdrop-filter` on cards, no pinned scroll sectio
 | Keep the hero phone at a fixed height | Let the demo content resize the phone |
 | Keep scroll distances short on mobile | Pin the screen for long scroll distances |
 | Keep animation tied to meaning (data flowing through the agent) | Add decorative floating parallax layers or a progress bar under the tabs |
+| Keep dashboard screens single-column on mobile with thumb-reachable primary actions | Overload the dashboard with dense analytics, charts, or multiple nested columns |
+| Segregate autonomous jobs (green `✓`) from items needing merchant triage (amber `!`) | Use red for stock or urgent alerts (amber is the sole attention color to preserve calm) |
+| Disclose autonomous agent reasoning in plain language ("moved to 10:30 due to clash at 10:00") | Expose machine-learning or technical jargon (e.g. "reflection loop retry count 2") to the shop owner |
 
 ---
 
