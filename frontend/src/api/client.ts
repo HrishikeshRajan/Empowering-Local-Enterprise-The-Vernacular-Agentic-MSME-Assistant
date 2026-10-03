@@ -22,7 +22,9 @@ import {
   MOCK_VOICE_PRESETS
 } from '../mockData';
 
-const BASE_URL = '/api';
+// In dev: Vite proxies /api → localhost:3001 (see vite.config.ts)
+// In prod: set VITE_API_URL=https://your-backend.com in .env
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
 async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {

@@ -2,6 +2,18 @@ import { Router, type Request, type Response } from 'express';
 import { store } from '../data/store.js';
 import { MAX_PRICE_DEVIATION_PERCENT } from '@msme/shared';
 
+function safeFloat(val: any, fallback?: number): number | undefined {
+  const n = parseFloat(String(val));
+  if (isNaN(n) || !isFinite(n) || n < 0) return fallback;
+  return n;
+}
+
+function requireFloat(val: any, field: string): { ok: true; value: number } | { ok: false; error: string } {
+  const n = parseFloat(String(val));
+  if (isNaN(n) || !isFinite(n) || n < 0) return { ok: false, error: `${field} must be a non-negative number` };
+  return { ok: true, value: n };
+}
+
 export const inventoryRouter = Router();
 
 /**
@@ -38,16 +50,21 @@ inventoryRouter.post('/', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'name, currentStock, and unitPrice are required' });
     }
 
+    const stockCheck  = requireFloat(currentStock, 'currentStock');
+    const priceCheck  = requireFloat(unitPrice, 'unitPrice');
+    if (!stockCheck.ok)  return res.status(400).json({ error: stockCheck.error });
+    if (!priceCheck.ok)  return res.status(400).json({ error: priceCheck.error });
+
     const newItem = store.addInventoryItem({
-      name,
-      nameMl: nameMl || name,
-      category: category || 'General',
-      categoryMl: categoryMl || 'സാധാരണ',
-      currentStock: parseFloat(currentStock),
-      unit: unit || 'kg',
-      reorderLevel: reorderLevel ? parseFloat(reorderLevel) : 10,
-      unitPrice: parseFloat(unitPrice),
-      costPrice: costPrice ? parseFloat(costPrice) : parseFloat(unitPrice) * 0.8
+      name: String(name).slice(0, 120),
+      nameMl: nameMl ? String(nameMl).slice(0, 120) : String(name).slice(0, 120),
+      category: category ? String(category).slice(0, 60) : 'General',
+      categoryMl: categoryMl ? String(categoryMl).slice(0, 60) : 'സാധാരണ',
+      currentStock: stockCheck.value,
+      unit: unit ? String(unit).slice(0, 20) : 'kg',
+      reorderLevel: safeFloat(reorderLevel) ?? 10,
+      unitPrice: priceCheck.value,
+      costPrice: safeFloat(costPrice) ?? priceCheck.value * 0.8,
     });
 
     return res.status(201).json(newItem);
@@ -80,16 +97,16 @@ inventoryRouter.put('/:id', (req: Request, res: Response) => {
     }
 
     const updated = store.updateInventoryItem(id, {
-      ...(name && { name }),
-      ...(nameMl && { nameMl }),
-      ...(category && { category }),
-      ...(categoryMl && { categoryMl }),
-      ...(currentStock !== undefined && { currentStock: parseFloat(currentStock) }),
-      ...(unit && { unit }),
-      ...(reorderLevel !== undefined && { reorderLevel: parseFloat(reorderLevel) }),
-      ...(unitPrice !== undefined && { unitPrice: parseFloat(unitPrice) }),
-      ...(costPrice !== undefined && { costPrice: parseFloat(costPrice) }),
-      lastRestocked: 'Just now'
+      ...(name        && { name: String(name).slice(0, 120) }),
+      ...(nameMl      && { nameMl: String(nameMl).slice(0, 120) }),
+      ...(category    && { category: String(category).slice(0, 60) }),
+      ...(categoryMl  && { categoryMl: String(categoryMl).slice(0, 60) }),
+      ...(currentStock !== undefined && { currentStock: safeFloat(currentStock) ?? existing.currentStock }),
+      ...(unit        && { unit: String(unit).slice(0, 20) }),
+      ...(reorderLevel !== undefined && { reorderLevel: safeFloat(reorderLevel) ?? existing.reorderLevel }),
+      ...(unitPrice    !== undefined && { unitPrice: safeFloat(unitPrice) ?? existing.unitPrice }),
+      ...(costPrice    !== undefined && { costPrice: safeFloat(costPrice) ?? existing.costPrice }),
+      lastRestocked: 'Just now',
     });
 
     return res.status(200).json({

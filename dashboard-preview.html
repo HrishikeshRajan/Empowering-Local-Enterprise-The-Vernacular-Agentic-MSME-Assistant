@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kada – Dashboard Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       KADA DESIGN SYSTEM TOKENS  (index.css)
+    ───────────────────────────────────────────────────────────────────────── */
+    :root {
+      color-scheme: light;
+      --bg:       #f8fbf8;
+      --surface:  #ffffff;
+      --tint:     #f0f6f1;
+      --line:     #dde7df;
+      --ink:      #1b2a23;
+      --muted:    #5f7167;
+      --accent:   #3f7a5c;
+      --accent-d: #2c5a43;
+      --soft:     #e3efe7;
+      --on:       #ffffff;
+      --amber:    #c58a1f;
+      --amber-t:  #8a5f0f;
+      --amber-bg: #f6ecd3;
+      --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+      --font-display: 'Newsreader', Georgia, serif;
+      --font-ml: 'Noto Sans Malayalam', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-display), 'Noto Sans Malayalam', Georgia, serif;
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -.015em;
+      color: var(--ink);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--tint); }
+    ::-webkit-scrollbar-thumb { background: #c3d6c9; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       ICONS
+    ───────────────────────────────────────────────────────────────────────── */
+    .i {
+      width: 22px; height: 22px;
+      fill: none; stroke: currentColor;
+      stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+      flex: none;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       SHELL
+    ───────────────────────────────────────────────────────────────────────── */
+    .app { min-height: 100svh; }
+
+    /* aura background */
+    .app .aura {
+      position: fixed; inset: 0; z-index: -1;
+      pointer-events: none; background: #eef2ee;
+    }
+    .app .aura i { display: none; }
+
+    /* mobile header */
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .8rem 1.1rem;
+    }
+
+    .logo {
+      font: 500 1.45rem 'Newsreader', serif;
+      display: flex; gap: .5rem; align-items: center;
+      color: var(--ink); text-decoration: none;
+    }
+    .logo i {
+      width: 1rem; height: 1rem;
+      border-radius: 50% 50% 50% 12%;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .av {
+      width: 2.4rem; height: 2.4rem; border-radius: 50%;
+      background: var(--soft); color: var(--accent-d);
+      display: grid; place-items: center;
+      font-weight: 600; font-size: .9rem;
+      text-decoration: none;
+      flex: none;
+    }
+
+    /* sidebar (hidden mobile) */
+    .side { display: none; }
+
+    /* main content */
+    .main {
+      padding: .4rem 1.1rem calc(6.5rem + env(safe-area-inset-bottom, 0));
+      max-width: 880px; margin: 0 auto;
+    }
+
+    /* bottom nav */
+    .knav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      align-items: end;
+      padding: .4rem .5rem calc(.4rem + env(safe-area-inset-bottom, 0));
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .knav a {
+      display: flex; flex-direction: column; align-items: center;
+      gap: .15rem; padding: .35rem 0;
+      font-size: .72rem; font-weight: 500; color: var(--muted);
+      min-height: 48px; text-decoration: none;
+    }
+    .knav a.on { color: var(--accent-d); }
+    .knav a.on .i { stroke-width: 2.2; }
+
+    .fab {
+      justify-self: center;
+      width: 3.6rem; height: 3.6rem; margin-top: -1.6rem;
+      border-radius: 50%; border: 0;
+      background: var(--accent); color: #fff;
+      display: grid; place-items: center;
+      box-shadow: 0 0 0 6px var(--bg), 0 10px 24px rgba(63,122,92,.35);
+      cursor: pointer;
+    }
+    .fab .i { width: 26px; height: 26px; }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       PAGE
+    ───────────────────────────────────────────────────────────────────────── */
+    .pg { display: none; }
+    .pg.on {
+      display: flex; flex-direction: column; gap: 1rem;
+      animation: kd-fd .4s both;
+    }
+    @keyframes kd-fd { from { opacity: 0; transform: translateY(8px); } }
+
+    /* page header */
+    .hd { margin: .6rem 0 1.2rem; }
+    .hd small {
+      display: block; color: var(--accent);
+      font-weight: 600; font-size: .8rem;
+      letter-spacing: .12em; text-transform: uppercase; margin-bottom: .3rem;
+    }
+    .hd h1 {
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      font-weight: 700; color: var(--ink); letter-spacing: -.02em;
+    }
+    .hd p { margin: .4rem 0 0; color: var(--muted); }
+
+    /* card */
+    .card {
+      background: #fff; border: 1px solid rgba(0,0,0,.07);
+      border-radius: 1.2rem; padding: 1.2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.04);
+    }
+    .card h3 {
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .08em; margin-bottom: .8rem;
+      color: var(--muted); text-transform: uppercase;
+    }
+
+    /* two-column grid */
+    .two { display: grid; gap: 1rem; }
+    .two .card { margin: 0; }
+
+    /* stat tiles */
+    .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; }
+    .tile {
+      padding: 1rem 1.1rem; border-radius: 1.1rem;
+      background: #fff; border: 1px solid rgba(0,0,0,.07);
+      border-left: 3px solid var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .tile b {
+      display: block;
+      font: 600 2rem 'Newsreader', serif;
+      line-height: 1.1; color: var(--ink);
+    }
+    .tile span { font-size: .82rem; color: var(--muted); margin-top: .15rem; display: block; }
+    .tile.w { border-left-color: var(--amber); }
+    .tile.w b { color: var(--amber-t); }
+    .tile.w span { color: var(--amber); }
+
+    /* list row */
+    .row {
+      display: flex; align-items: center; gap: .8rem;
+      padding: .8rem 0; border-top: 1px solid var(--line); cursor: default;
+    }
+    .row:first-child { border-top: 0; }
+    .row .t { flex: 1; min-width: 0; }
+    .row .t b {
+      display: block; font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row .t small {
+      color: var(--muted); font-size: .85rem; display: block;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .row time { font-size: .78rem; color: var(--muted); flex: none; }
+    .row.c { cursor: pointer; }
+    .row.c:hover { background: var(--tint); border-radius: .6rem; margin: 0 -.4rem; padding-left: .4rem; padding-right: .4rem; }
+
+    /* dot avatar */
+    .dot {
+      flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--soft); color: var(--accent-d);
+      font-weight: 600; font-size: .85rem;
+    }
+    .dot.w { background: var(--amber-bg); color: var(--amber-t); }
+
+    /* badge pill */
+    .bd {
+      flex: none; font-size: .75rem; font-weight: 600;
+      padding: .2rem .6rem; border-radius: 999px;
+      background: var(--soft); color: var(--accent-d);
+    }
+    .bd.w { background: var(--amber-bg); color: var(--amber-t); }
+
+    /* agent mode toggle */
+    .mode { display: flex; align-items: center; gap: .9rem; }
+    .mode .t { flex: 1; }
+    .mode b { display: block; font-weight: 600; }
+    .mode small { color: var(--muted); }
+
+    /* toggle switch */
+    .sw {
+      position: relative; flex: none;
+      width: 3.4rem; height: 2rem; border-radius: 999px;
+      border: 0; background: var(--line); cursor: pointer; transition: background .3s;
+    }
+    .sw[aria-checked="true"] { background: var(--accent); }
+    .sw::after {
+      content: ""; position: absolute;
+      top: .25rem; left: .25rem;
+      width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      background: #fff; transition: transform .3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .sw[aria-checked="true"]::after { transform: translateX(1.4rem); }
+
+    /* live pulse dot */
+    .live {
+      display: inline-block; width: .55rem; height: .55rem; border-radius: 50%;
+      background: var(--accent); margin-right: .5rem; animation: kd-pl 1.6s infinite;
+    }
+    @keyframes kd-pl { 50% { transform: scale(1.7); opacity: .35; } }
+
+    /* segmented control */
+    .seg {
+      display: flex; gap: .2rem; padding: .25rem;
+      border-radius: 999px; background: #fff; border: 1px solid var(--line);
+    }
+    .seg button {
+      flex: 1; border: 0; background: none;
+      padding: .45rem .3rem; border-radius: 999px;
+      font-size: .85rem; font-weight: 500; color: var(--muted); cursor: pointer; min-height: 40px;
+    }
+    .seg button.on { background: var(--soft); color: var(--accent-d); }
+
+    /* expandable detail */
+    .more { display: none; padding: .2rem 0 .8rem 3rem; font-size: .88rem; color: var(--muted); }
+    .more.on { display: grid; gap: .35rem; }
+    .more div::before { content: "✓  "; color: var(--accent); font-weight: 700; }
+    .more .w::before { content: "!  "; color: var(--amber); }
+
+    /* button */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      border: 1px solid var(--accent); border-radius: 999px;
+      padding: .7rem 1.4rem; min-height: 48px;
+      background: var(--accent); color: var(--on);
+      font-weight: 500; font: inherit; cursor: pointer; transition: background .25s;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--accent-d); }
+    .btn.g { background: rgba(255,255,255,.8); color: var(--ink); border-color: var(--line); }
+    .btn.s { min-height: 40px; padding: .45rem 1rem; font-size: .9rem; }
+
+    /* focus */
+    .btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 3px;
+    }
+
+    /* dfab (desktop voice shortcut) */
+    .dfab { display: none; }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       DESKTOP  ≥ 900 px
+    ───────────────────────────────────────────────────────────────────────── */
+    @media (min-width: 900px) {
+      .app { display: grid; grid-template-columns: 250px 1fr; }
+
+      .side {
+        display: flex; flex-direction: column; gap: .15rem;
+        padding: 1.6rem .9rem;
+        position: sticky; top: 0; height: 100svh;
+        background: #111c16;
+        overflow-y: auto;
+      }
+      .side .logo {
+        padding: .2rem .7rem 1.6rem;
+        color: #e2ede7;
+      }
+      .side .logo i { background: #5fb98d; }
+      .side a {
+        display: flex; align-items: center; gap: .75rem;
+        padding: .65rem .7rem; border-radius: .7rem;
+        color: rgba(210,230,218,.5); font-weight: 500; min-height: 44px;
+        text-decoration: none; transition: color .15s, background .15s;
+        border-left: 2px solid transparent;
+      }
+      .side a:hover { color: rgba(210,230,218,.85); background: rgba(255,255,255,.06); }
+      .side a.on {
+        color: #a8dfbe;
+        background: rgba(95,185,141,.1);
+        border-left-color: #5fb98d;
+      }
+      .side a.on .i { stroke-width: 2.1; }
+      .side .shop {
+        margin-top: auto; padding: .75rem .8rem; border-radius: .9rem;
+        border: 1px solid rgba(255,255,255,.1);
+        display: flex; gap: .65rem; align-items: center; font-size: .88rem;
+        color: rgba(210,230,218,.6);
+      }
+      .side .shop b { display: block; color: rgba(210,230,218,.9); font-weight: 500; }
+      .side .shop small { color: rgba(210,230,218,.4) !important; }
+      .side .shop .av { background: rgba(95,185,141,.15); color: #a8dfbe; }
+
+      .top, .knav { display: none; }
+      .main { padding: 1.6rem 2rem 3rem; max-width: none; margin: 0; }
+      .tiles { grid-template-columns: repeat(4, 1fr); }
+      .two { grid-template-columns: 1fr 1fr; }
+      .dfab { display: inline-flex !important; }
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       DEMO TABS (JS-free toggle)
+    ───────────────────────────────────────────────────────────────────────── */
+    .demo-tab-btn {
+      all: unset;
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem .7rem; border-radius: .7rem;
+      color: rgba(210,230,218,.5); font-weight: 500; min-height: 44px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+    }
+    .demo-tab-btn:hover { color: rgba(210,230,218,.85); background: rgba(255,255,255,.06); }
+    .demo-tab-btn.on {
+      color: #a8dfbe;
+      background: rgba(95,185,141,.1);
+      border-left-color: #5fb98d;
+    }
+    .demo-tab-btn.on .i { stroke-width: 2.1; }
+  </style>
+</head>
+
+<body>
+
+<!-- ── Hidden SVG sprite ─────────────────────────────────────────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- home -->
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <!-- message-circle -->
+  <symbol id="i-msg" viewBox="0 0 24 24">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </symbol>
+  <!-- file-text -->
+  <symbol id="i-file" viewBox="0 0 24 24">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+  </symbol>
+  <!-- activity -->
+  <symbol id="i-activity" viewBox="0 0 24 24">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </symbol>
+  <!-- package -->
+  <symbol id="i-box" viewBox="0 0 24 24">
+    <path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
+  </symbol>
+  <!-- calendar -->
+  <symbol id="i-cal" viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </symbol>
+  <!-- settings -->
+  <symbol id="i-settings" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <!-- mic -->
+  <symbol id="i-mic" viewBox="0 0 24 24">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+  </symbol>
+  <!-- alert-triangle -->
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="m10.29 3.86-8.66 15A1 1 0 0 0 2.5 20.5h19a1 1 0 0 0 .87-1.5L13.71 3.86a1 1 0 0 0-1.73 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </symbol>
+  <!-- check-circle -->
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+  </symbol>
+  <!-- chevron-right -->
+  <symbol id="i-caret" viewBox="0 0 24 24">
+    <polyline points="9 18 15 12 9 6"/>
+  </symbol>
+  <!-- trending-up -->
+  <symbol id="i-trend" viewBox="0 0 24 24">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+  </symbol>
+  <!-- plus -->
+  <symbol id="i-plus" viewBox="0 0 24 24">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <!-- user -->
+  <symbol id="i-user" viewBox="0 0 24 24">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </symbol>
+  <!-- clock -->
+  <symbol id="i-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <!-- zap -->
+  <symbol id="i-zap" viewBox="0 0 24 24">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </symbol>
+</svg>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════════════════════════════════════ -->
+<div class="app">
+  <div class="aura" aria-hidden="true"><i></i></div>
+
+  <!-- ── Sidebar (desktop) ──────────────────────────────────────────────── -->
+  <div class="side" role="navigation" aria-label="Main navigation">
+
+    <a href="#" class="logo">
+      <i aria-hidden="true"></i>
+      Kada
+    </a>
+
+    <a href="#" class="demo-tab-btn on" onclick="showTab('overview',this); return false;">
+      <svg class="i"><use href="#i-home"/></svg>
+      Home
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('whatsapp',this); return false;">
+      <svg class="i"><use href="#i-msg"/></svg>
+      Inbox
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('invoices',this); return false;">
+      <svg class="i"><use href="#i-file"/></svg>
+      Bills
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('activity',this); return false;">
+      <svg class="i"><use href="#i-activity"/></svg>
+      Activity
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('inventory',this); return false;">
+      <svg class="i"><use href="#i-box"/></svg>
+      Stock
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('appointments',this); return false;">
+      <svg class="i"><use href="#i-cal"/></svg>
+      Bookings
+    </a>
+    <a href="#" class="demo-tab-btn" onclick="showTab('settings',this); return false;">
+      <svg class="i"><use href="#i-settings"/></svg>
+      Setup
+    </a>
+
+    <!-- shop card -->
+    <div class="shop">
+      <span class="av">HS</span>
+      <div>
+        <b>Hari's Store</b>
+        <small>Kozhikode, Kerala</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right column ───────────────────────────────────────────────────── -->
+  <div>
+
+    <!-- mobile header -->
+    <div class="top">
+      <a href="#" class="logo"><i aria-hidden="true"></i> Kada</a>
+      <div style="display:flex;gap:.7rem;align-items:center;">
+        <button class="btn g s" aria-label="Voice command" style="border-radius:50%;width:2.6rem;height:2.6rem;padding:0;">
+          <svg class="i"><use href="#i-mic"/></svg>
+        </button>
+        <a href="#" class="av" aria-label="Account">HS</a>
+      </div>
+    </div>
+
+    <!-- ── Main ────────────────────────────────────────────────────────── -->
+    <main class="main">
+
+      <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
+      <section id="tab-overview" class="pg on" aria-labelledby="overview-title">
+
+        <div class="hd">
+          <small>Sunday, October 4</small>
+          <h1 id="overview-title">Good morning, Hari 👋</h1>
+          <p>Here's your store at a glance</p>
+        </div>
+
+        <!-- stat tiles -->
+        <div class="tiles">
+          <div class="tile">
+            <b>₹14,820</b>
+            <span>Today's sales</span>
+          </div>
+          <div class="tile">
+            <b>38</b>
+            <span>Orders today</span>
+          </div>
+          <div class="tile">
+            <b>12</b>
+            <span>Bookings pending</span>
+          </div>
+          <div class="tile w">
+            <b>3</b>
+            <span>Needs your attention</span>
+          </div>
+        </div>
+
+        <!-- agent mode toggle -->
+        <div class="card">
+          <h3>Agent Mode</h3>
+          <div class="mode">
+            <div class="t">
+              <b><span class="live" aria-hidden="true"></span>Autonomous — Active</b>
+              <small>Kada is handling bookings, messages &amp; reorders automatically</small>
+            </div>
+            <button class="sw" role="switch" aria-checked="true" aria-label="Toggle agent mode" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')"></button>
+          </div>
+        </div>
+
+        <!-- two columns: triage + bookings -->
+        <div class="two">
+
+          <!-- needs attention -->
+          <div class="card">
+            <h3>! Needs you</h3>
+
+            <div class="row c">
+              <span class="dot w">RK</span>
+              <div class="t">
+                <b>Ramesh Kumar</b>
+                <small>Wants to reschedule — Monday 10 AM</small>
+              </div>
+              <span class="bd w">Review</span>
+            </div>
+
+            <div class="row c">
+              <span class="dot w">
+                <svg class="i" style="width:16px;height:16px;"><use href="#i-alert"/></svg>
+              </span>
+              <div class="t">
+                <b>Tomato — low stock</b>
+                <small>Only 2 kg left, reorder level is 10 kg</small>
+              </div>
+              <span class="bd w">Order</span>
+            </div>
+
+            <div class="row c">
+              <span class="dot w">PV</span>
+              <div class="t">
+                <b>Price spike flagged</b>
+                <small>Coconut oil ₹85 → ₹135 (+59%)</small>
+              </div>
+              <span class="bd w">Confirm</span>
+            </div>
+          </div>
+
+          <!-- today's bookings -->
+          <div class="card">
+            <h3>Today's bookings</h3>
+
+            <div class="row">
+              <span class="dot">SN</span>
+              <div class="t">
+                <b>Sunitha Nair</b>
+                <small>Haircut · 10:00 AM</small>
+              </div>
+              <span class="bd">Done</span>
+            </div>
+
+            <div class="row">
+              <span class="dot">AK</span>
+              <div class="t">
+                <b>Anoop Kumar</b>
+                <small>Colour treatment · 12:30 PM</small>
+              </div>
+              <time>12:30</time>
+            </div>
+
+            <div class="row">
+              <span class="dot">MJ</span>
+              <div class="t">
+                <b>Meera Jose</b>
+                <small>Facial · 3:00 PM</small>
+              </div>
+              <time>15:00</time>
+            </div>
+
+            <div class="row">
+              <span class="dot">RD</span>
+              <div class="t">
+                <b>Rajesh Das</b>
+                <small>Shave · 4:30 PM</small>
+              </div>
+              <time>16:30</time>
+            </div>
+          </div>
+
+        </div><!-- /.two -->
+
+        <!-- recent agent activity -->
+        <div class="card">
+          <h3>Recent activity</h3>
+
+          <div class="row">
+            <span class="dot">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg>
+            </span>
+            <div class="t">
+              <b>Auto-replied to Sunitha's WhatsApp booking</b>
+              <small>Confirmed 10 AM slot, sent location pin</small>
+            </div>
+            <time>9:02</time>
+          </div>
+          <!-- expandable detail -->
+          <div class="more on">
+            <div>Parsed voice note: "Book me tomorrow at 10"</div>
+            <div>Found open slot · sent confirmation in Malayalam</div>
+            <div>Calendar updated · WhatsApp delivered</div>
+          </div>
+
+          <div class="row">
+            <span class="dot">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-file"/></svg>
+            </span>
+            <div class="t">
+              <b>Invoice parsed — Fresh Mart Supply Co.</b>
+              <small>₹4,320 · 6 items · stock synced automatically</small>
+            </div>
+            <time>8:45</time>
+          </div>
+
+          <div class="row">
+            <span class="dot">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-box"/></svg>
+            </span>
+            <div class="t">
+              <b>Reorder triggered — Basmati rice</b>
+              <small>Stock hit reorder level · draft sent to supplier</small>
+            </div>
+            <time>8:30</time>
+          </div>
+
+          <div class="row">
+            <span class="dot w">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-alert"/></svg>
+            </span>
+            <div class="t">
+              <b>Unusual price detected — Coconut oil</b>
+              <small>59% rise exceeds 30% guardrail · waiting for you</small>
+            </div>
+            <time>8:15</time>
+          </div>
+        </div>
+
+        <!-- voice shortcut (desktop only) -->
+        <div style="display:flex;gap:.75rem;align-items:center;padding:.2rem 0 .4rem;">
+          <button class="btn dfab" style="gap:.5rem;">
+            <svg class="i"><use href="#i-mic"/></svg>
+            Speak to Kada
+          </button>
+          <span style="font-size:.85rem;color:var(--muted);">or type a command below</span>
+        </div>
+
+      </section><!-- /#tab-overview -->
+
+
+      <!-- ── WHATSAPP / INBOX TAB ──────────────────────────────────────── -->
+      <section id="tab-whatsapp" class="pg" aria-labelledby="inbox-title">
+
+        <div class="hd">
+          <small>WhatsApp</small>
+          <h1 id="inbox-title">Inbox</h1>
+          <p>Customer messages &amp; bookings</p>
+        </div>
+
+        <div class="seg" style="margin-bottom:.5rem;">
+          <button class="on">All (14)</button>
+          <button>Bookings (6)</button>
+          <button>Orders (5)</button>
+          <button>Queries (3)</button>
+        </div>
+
+        <div class="card" style="padding:.4rem .8rem;">
+          <div class="row c">
+            <span class="dot">SK</span>
+            <div class="t">
+              <b>Suresh Kumar</b>
+              <small>ഒരു appointment book ചെയ്യണം നാളെ 11 AM ക്ക്</small>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
+              <time>9:14 AM</time>
+              <span class="bd">Book</span>
+            </div>
+          </div>
+          <div class="row c">
+            <span class="dot">LM</span>
+            <div class="t">
+              <b>Lekha Menon</b>
+              <small>What are your prices for facial?</small>
+            </div>
+            <time>8:55 AM</time>
+          </div>
+          <div class="row c">
+            <span class="dot w">RK</span>
+            <div class="t">
+              <b>Ramesh Kumar</b>
+              <small>Can I change my slot to Monday?</small>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
+              <time>8:40 AM</time>
+              <span class="bd w">! Needs you</span>
+            </div>
+          </div>
+          <div class="row c">
+            <span class="dot">AN</span>
+            <div class="t">
+              <b>Anjali Nair</b>
+              <small>Thank you! See you at 2 PM 🙏</small>
+            </div>
+            <time>Yesterday</time>
+          </div>
+          <div class="row c">
+            <span class="dot">BK</span>
+            <div class="t">
+              <b>Balu Krishnan</b>
+              <small>Is the store open on Sunday?</small>
+            </div>
+            <time>Yesterday</time>
+          </div>
+        </div>
+
+      </section><!-- /#tab-whatsapp -->
+
+
+      <!-- ── INVOICES / BILLS TAB ──────────────────────────────────────── -->
+      <section id="tab-invoices" class="pg" aria-labelledby="bills-title">
+
+        <div class="hd">
+          <small>Bills &amp; Invoices</small>
+          <h1 id="bills-title">Bill Scanner</h1>
+          <p>Snap a photo to parse &amp; sync stock</p>
+        </div>
+
+        <div class="card" style="cursor:pointer;text-align:center;padding:2rem 1rem;border:1.5px dashed var(--accent);background:rgba(227,239,231,.4);">
+          <svg class="i" style="width:36px;height:36px;margin:0 auto .6rem;display:block;stroke:var(--accent);"><use href="#i-file"/></svg>
+          <b style="color:var(--accent-d);">Tap to scan bill or invoice</b><br>
+          <small style="color:var(--muted);">JPG, PNG or PDF · AI reads &amp; syncs stock automatically</small>
+        </div>
+
+        <div class="card">
+          <h3>Recent bills</h3>
+
+          <div class="row">
+            <span class="dot">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg>
+            </span>
+            <div class="t">
+              <b>Fresh Mart Supply Co.</b>
+              <small>₹4,320 · 6 items · stock synced</small>
+            </div>
+            <span class="bd">Verified</span>
+          </div>
+
+          <div class="row">
+            <span class="dot w">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-alert"/></svg>
+            </span>
+            <div class="t">
+              <b>Kerala Grocers</b>
+              <small>₹7,800 · coconut oil price spike flagged</small>
+            </div>
+            <span class="bd w">Review</span>
+          </div>
+
+          <div class="row">
+            <span class="dot">
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg>
+            </span>
+            <div class="t">
+              <b>Spice Valley Traders</b>
+              <small>₹2,140 · 4 items · auto-verified</small>
+            </div>
+            <span class="bd">Verified</span>
+          </div>
+        </div>
+
+      </section><!-- /#tab-invoices -->
+
+
+      <!-- ── ACTIVITY TAB ──────────────────────────────────────────────── -->
+      <section id="tab-activity" class="pg" aria-labelledby="activity-title">
+
+        <div class="hd">
+          <small>Agent Log</small>
+          <h1 id="activity-title">Activity</h1>
+          <p>Everything Kada did autonomously</p>
+        </div>
+
+        <div class="seg" style="margin-bottom:.5rem;">
+          <button class="on">All</button>
+          <button>Done ✓</button>
+          <button>! Needs you</button>
+        </div>
+
+        <div class="card">
+          <div class="row">
+            <span class="dot"><svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg></span>
+            <div class="t">
+              <b>WhatsApp booking confirmed — Sunitha Nair 10 AM</b>
+              <small>Voice → text → calendar → reply · 3 steps · 1.2 s</small>
+            </div>
+            <time>9:02</time>
+          </div>
+          <div class="more on">
+            <div>Recognised "book me tomorrow at 10" in Malayalam</div>
+            <div>Slot checked: free · calendar blocked</div>
+            <div>WhatsApp reply sent in Malayalam with confirmation</div>
+          </div>
+
+          <div class="row">
+            <span class="dot"><svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg></span>
+            <div class="t">
+              <b>Invoice parsed — Fresh Mart Supply Co.</b>
+              <small>₹4,320 · 6 items · inventory updated</small>
+            </div>
+            <time>8:45</time>
+          </div>
+
+          <div class="row">
+            <span class="dot w"><svg class="i" style="width:16px;height:16px;"><use href="#i-alert"/></svg></span>
+            <div class="t">
+              <b>Price spike — Coconut oil +59%</b>
+              <small>Exceeds 30% guardrail · escalated to merchant</small>
+            </div>
+            <time>8:15</time>
+          </div>
+
+          <div class="row">
+            <span class="dot"><svg class="i" style="width:16px;height:16px;"><use href="#i-check"/></svg></span>
+            <div class="t">
+              <b>Store hours auto-replied to 4 customers</b>
+              <small>Pattern matched "open?" → sent standard reply</small>
+            </div>
+            <time>Yesterday</time>
+          </div>
+        </div>
+
+      </section><!-- /#tab-activity -->
+
+
+      <!-- ── INVENTORY / STOCK TAB ─────────────────────────────────────── -->
+      <section id="tab-inventory" class="pg" aria-labelledby="stock-title">
+
+        <div class="hd">
+          <small>Inventory</small>
+          <h1 id="stock-title">Stock</h1>
+          <p>Your store inventory at a glance</p>
+        </div>
+
+        <div class="tiles" style="grid-template-columns:repeat(2,1fr);">
+          <div class="tile">
+            <b>47</b>
+            <span>Items in stock</span>
+          </div>
+          <div class="tile w">
+            <b>3</b>
+            <span>Low stock alerts</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+            <h3 style="margin:0;">All items</h3>
+            <button class="btn s">+ Add item</button>
+          </div>
+
+          <div class="row">
+            <span class="dot">T</span>
+            <div class="t">
+              <b>Tomato <span style="font-weight:400;color:var(--muted);font-size:.85rem;">· തക്കാളി</span></b>
+              <small>2 kg remaining · reorder at 10 kg</small>
+            </div>
+            <span class="bd w">Low</span>
+          </div>
+          <div class="row">
+            <span class="dot">R</span>
+            <div class="t">
+              <b>Basmati Rice <span style="font-weight:400;color:var(--muted);font-size:.85rem;">· ബാസ്മതി</span></b>
+              <small>45 kg · ₹85/kg</small>
+            </div>
+            <span class="bd">OK</span>
+          </div>
+          <div class="row">
+            <span class="dot">C</span>
+            <div class="t">
+              <b>Coconut Oil <span style="font-weight:400;color:var(--muted);font-size:.85rem;">· വെളിച്ചെണ്ണ</span></b>
+              <small>12 L · ₹135/L</small>
+            </div>
+            <span class="bd w">Price !</span>
+          </div>
+          <div class="row">
+            <span class="dot">O</span>
+            <div class="t">
+              <b>Onion <span style="font-weight:400;color:var(--muted);font-size:.85rem;">· ഉള്ളി</span></b>
+              <small>30 kg · ₹28/kg</small>
+            </div>
+            <span class="bd">OK</span>
+          </div>
+          <div class="row">
+            <span class="dot">S</span>
+            <div class="t">
+              <b>Sugar <span style="font-weight:400;color:var(--muted);font-size:.85rem;">· പഞ്ചസാര</span></b>
+              <small>8 kg · ₹42/kg</small>
+            </div>
+            <span class="bd">OK</span>
+          </div>
+        </div>
+
+      </section><!-- /#tab-inventory -->
+
+
+      <!-- ── APPOINTMENTS / BOOKINGS TAB ──────────────────────────────── -->
+      <section id="tab-appointments" class="pg" aria-labelledby="bookings-title">
+
+        <div class="hd">
+          <small>Calendar</small>
+          <h1 id="bookings-title">Bookings</h1>
+          <p>Today's schedule &amp; upcoming</p>
+        </div>
+
+        <div class="seg" style="margin-bottom:.5rem;">
+          <button class="on">Today</button>
+          <button>Tomorrow</button>
+          <button>This week</button>
+        </div>
+
+        <div class="card">
+          <h3>Sunday, 4 October</h3>
+          <div class="row">
+            <span class="dot">SN</span>
+            <div class="t"><b>Sunitha Nair</b><small>Haircut · 10:00 AM</small></div>
+            <span class="bd">Done</span>
+          </div>
+          <div class="row">
+            <span class="dot">AK</span>
+            <div class="t"><b>Anoop Kumar</b><small>Colour treatment · 12:30 PM</small></div>
+            <time>12:30</time>
+          </div>
+          <div class="row">
+            <span class="dot">MJ</span>
+            <div class="t"><b>Meera Jose</b><small>Facial · 3:00 PM</small></div>
+            <time>15:00</time>
+          </div>
+          <div class="row">
+            <span class="dot">RD</span>
+            <div class="t"><b>Rajesh Das</b><small>Shave · 4:30 PM</small></div>
+            <time>16:30</time>
+          </div>
+          <div class="row">
+            <span class="dot w">RK</span>
+            <div class="t"><b>Ramesh Kumar — pending reschedule</b><small>Wants Monday 10 AM</small></div>
+            <span class="bd w">! Review</span>
+          </div>
+        </div>
+
+      </section><!-- /#tab-appointments -->
+
+
+      <!-- ── SETTINGS / SETUP TAB ──────────────────────────────────────── -->
+      <section id="tab-settings" class="pg" aria-labelledby="settings-title">
+
+        <div class="hd">
+          <small>Store Settings</small>
+          <h1 id="settings-title">Setup</h1>
+          <p>Configure your store and Kada</p>
+        </div>
+
+        <div class="card">
+          <h3>Store profile</h3>
+          <div class="row">
+            <span class="dot">HS</span>
+            <div class="t"><b>Hari's Store</b><small>Kozhikode, Kerala · +91 98765 43210</small></div>
+            <button class="btn g s">Edit</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Agent behaviour</h3>
+          <div class="mode" style="margin-bottom:.9rem;">
+            <div class="t"><b>Auto-confirm bookings</b><small>No human approval needed for known customers</small></div>
+            <button class="sw" role="switch" aria-checked="true" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')"></button>
+          </div>
+          <div class="mode" style="margin-bottom:.9rem;">
+            <div class="t"><b>Auto-reorder stock</b><small>Send WhatsApp to supplier when level drops</small></div>
+            <button class="sw" role="switch" aria-checked="false" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')"></button>
+          </div>
+          <div class="mode">
+            <div class="t"><b>Reply in Malayalam</b><small>Always reply customers in their language</small></div>
+            <button class="sw" role="switch" aria-checked="true" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')"></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Language</h3>
+          <div class="seg">
+            <button class="on">മലയാളം</button>
+            <button>English</button>
+          </div>
+        </div>
+
+      </section><!-- /#tab-settings -->
+
+    </main>
+  </div><!-- /right column -->
+</div><!-- /.app -->
+
+
+<!-- ── Mobile bottom nav ──────────────────────────────────────────────────── -->
+<nav class="knav" aria-label="Bottom navigation">
+  <a href="#" class="on" onclick="showTab('overview',null,'knav'); return false;" aria-label="Home">
+    <svg class="i"><use href="#i-home"/></svg>
+    Home
+  </a>
+  <a href="#" onclick="showTab('whatsapp',null,'knav'); return false;" aria-label="Inbox">
+    <svg class="i"><use href="#i-msg"/></svg>
+    Inbox
+  </a>
+  <button class="fab" aria-label="Voice command">
+    <svg class="i"><use href="#i-mic"/></svg>
+  </button>
+  <a href="#" onclick="showTab('inventory',null,'knav'); return false;" aria-label="Stock">
+    <svg class="i"><use href="#i-box"/></svg>
+    Stock
+  </a>
+  <a href="#" onclick="showTab('settings',null,'knav'); return false;" aria-label="Setup">
+    <svg class="i"><use href="#i-settings"/></svg>
+    Setup
+  </a>
+</nav>
+
+
+<script>
+  // Map tab id → sidebar button selector
+  const TAB_KEYS = ['overview','whatsapp','invoices','activity','inventory','appointments','settings'];
+
+  function showTab(id, clickedBtn, source) {
+    // hide all tabs
+    TAB_KEYS.forEach(k => {
+      const el = document.getElementById('tab-' + k);
+      if (el) { el.classList.remove('on'); }
+    });
+    // show target
+    const target = document.getElementById('tab-' + id);
+    if (target) target.classList.add('on');
+
+    // update sidebar nav buttons
+    document.querySelectorAll('.demo-tab-btn').forEach(btn => btn.classList.remove('on'));
+    // find matching sidebar btn by onclick text
+    document.querySelectorAll('.demo-tab-btn').forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'"+id+"'")) {
+        btn.classList.add('on');
+      }
+    });
+
+    // update bottom nav links
+    document.querySelectorAll('.knav a').forEach(a => a.classList.remove('on'));
+    document.querySelectorAll('.knav a').forEach(a => {
+      if (a.getAttribute('onclick') && a.getAttribute('onclick').includes("'"+id+"'")) {
+        a.classList.add('on');
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

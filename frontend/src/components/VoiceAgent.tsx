@@ -302,9 +302,9 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   justifyContent: 'space-between',
                   padding: '12px 14px',
                   borderRadius: 'var(--radius-md)',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)',
+                  background: 'var(--tint)',
+                  border: '1px solid var(--line)',
+                  color: 'var(--ink)',
                   textAlign: 'left',
                   cursor: isProcessing ? 'not-allowed' : 'pointer',
                   opacity: isProcessing ? 0.6 : 1,
@@ -316,14 +316,14 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.68rem' }}>
                       {preset.category}
                     </span>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
                       ⏱ {preset.duration}
                     </span>
                   </div>
-                  <p className="font-ml" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', lineHeight: 1.4 }}>
+                  <p className="font-ml" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4 }}>
                     "{preset.malayalamAudioText}"
                   </p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '2px' }}>
                     {preset.englishTranslation}
                   </p>
                 </div>
@@ -332,11 +332,11 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   width: '32px', 
                   height: '32px', 
                   borderRadius: 'var(--radius-full)', 
-                  background: 'rgba(16, 185, 129, 0.15)', 
+                  background: 'var(--soft)', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  color: 'var(--emerald-light)',
+                  color: 'var(--accent-d)',
                   flexShrink: 0
                 }}>
                   <Play size={14} />
@@ -355,10 +355,10 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               style={{
                 flex: 1,
                 padding: '10px 14px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(0, 0, 0, 0.3)',
-                color: '#fff',
+                borderRadius: 'var(--radius-full)',
+                border: '1px solid var(--line)',
+                background: 'var(--surface)',
+                color: 'var(--ink)',
                 fontSize: '0.85rem',
                 outline: 'none'
               }}
@@ -367,20 +367,22 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               type="submit" 
               className="btn-primary" 
               disabled={isProcessing || !customInput.trim()}
-              style={{ padding: '0 16px' }}
+              style={{ padding: '0 18px' }}
             >
               <Send size={16} />
+              <span>Send</span>
             </button>
           </form>
 
         </div>
 
         {/* Right Column: Live Reflection Pattern Visualizer */}
-        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Right Column: 4-Step Self-Critique Agent Reflection Trace */}
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RotateCcw size={18} color="var(--indigo-main)" />
+            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RotateCcw size={18} color="var(--accent-d)" />
               {language === 'ml' ? 'ഓട്ടോമാറ്റിക് പരിശോധനാ ഘട്ടങ്ങൾ' : '4-Step Verification Process'}
             </h3>
             <span className="glass-badge glass-badge-emerald">
@@ -392,17 +394,17 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
           <div style={{ 
             padding: '12px 16px', 
             borderRadius: 'var(--radius-md)', 
-            background: 'rgba(99, 102, 241, 0.08)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'var(--tint)',
+            border: '1px solid var(--line)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
             <div>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#a5b4fc', fontWeight: 600 }}>
+              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--accent-d)', fontWeight: 600 }}>
                 {language === 'ml' ? 'നിലവിലെ പ്രവർത്തനം' : 'Current Task'}: #{selectedLog.id}
               </span>
-              <p className="font-ml" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', marginTop: '2px' }}>
+              <p className="font-ml" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink)', marginTop: '2px' }}>
                 {selectedLog.inputPromptMl || selectedLog.inputPrompt}
               </p>
             </div>
@@ -410,7 +412,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.72rem' }}>
                 {selectedLog.confidence}% Match
               </span>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '4px' }}>
                 ⏱ {selectedLog.executionTimeMs}ms
               </p>
             </div>
@@ -423,8 +425,8 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
             <div style={{ 
               padding: '14px', 
               borderRadius: 'var(--radius-md)', 
-              background: activeStepIndex >= 0 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-              border: activeStepIndex >= 0 ? '1px solid var(--border-glow)' : '1px solid var(--border-subtle)',
+              background: activeStepIndex >= 0 ? 'var(--soft)' : 'var(--tint)',
+              border: '1px solid var(--line)',
               position: 'relative'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -433,7 +435,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     width: '24px', 
                     height: '24px', 
                     borderRadius: '50%', 
-                    background: 'var(--emerald-main)', 
+                    background: 'var(--accent)', 
                     color: '#fff', 
                     fontSize: '0.75rem', 
                     fontWeight: 700, 
@@ -443,7 +445,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   }}>
                     1
                   </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
                     {language === 'ml' ? '1. ശബ്ദം മനസ്സിലാക്കൽ' : '1. Voice Understanding'}
                   </span>
                 </div>
@@ -451,7 +453,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   {language === 'ml' ? 'മലയാളം ശബ്ദം' : 'Malayalam Speech'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', paddingLeft: '32px' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', paddingLeft: '32px' }}>
                 {selectedLog.steps[0]?.description || 'Understood natural spoken command accurately.'}
               </p>
             </div>
@@ -460,8 +462,8 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
             <div style={{ 
               padding: '14px', 
               borderRadius: 'var(--radius-md)', 
-              background: activeStepIndex >= 1 ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-              border: activeStepIndex >= 1 ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid var(--border-subtle)'
+              background: activeStepIndex >= 1 ? 'var(--soft)' : 'var(--tint)',
+              border: '1px solid var(--line)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -469,7 +471,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     width: '24px', 
                     height: '24px', 
                     borderRadius: '50%', 
-                    background: 'var(--indigo-main)', 
+                    background: 'var(--accent-d)', 
                     color: '#fff', 
                     fontSize: '0.75rem', 
                     fontWeight: 700, 
@@ -479,7 +481,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   }}>
                     2
                   </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
                     {language === 'ml' ? '2. കടയിലെ പ്രവർത്തനം' : '2. Store Action'}
                   </span>
                 </div>
@@ -487,7 +489,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   {language === 'ml' ? 'ഓട്ടോമാറ്റിക്' : 'Automatic'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', paddingLeft: '32px' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', paddingLeft: '32px' }}>
                 {selectedLog.steps[1]?.description || 'Updated store inventory records.'}
               </p>
             </div>
@@ -496,8 +498,8 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
             <div style={{ 
               padding: '14px', 
               borderRadius: 'var(--radius-md)', 
-              background: activeStepIndex >= 2 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-              border: activeStepIndex >= 2 ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid var(--border-subtle)'
+              background: activeStepIndex >= 2 ? '#f6ecd3' : 'var(--tint)',
+              border: '1px solid var(--line)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -515,7 +517,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   }}>
                     3
                   </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
                     {language === 'ml' ? '3. വിലയും കണക്കുകളും പരിശോധിക്കൽ' : '3. Price & Calculation Verification'}
                   </span>
                 </div>
@@ -524,7 +526,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   {language === 'ml' ? 'സുരക്ഷിതം' : 'Verified Safe'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', paddingLeft: '32px' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', paddingLeft: '32px' }}>
                 {selectedLog.steps[2]?.description || 'Verified numbers match market averages and contain zero errors.'}
               </p>
             </div>
@@ -533,8 +535,8 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
             <div style={{ 
               padding: '14px', 
               borderRadius: 'var(--radius-md)', 
-              background: activeStepIndex >= 3 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-              border: activeStepIndex >= 3 ? '1px solid var(--emerald-main)' : '1px solid var(--border-subtle)'
+              background: activeStepIndex >= 3 ? 'var(--soft)' : 'var(--tint)',
+              border: '1px solid var(--line)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -542,7 +544,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     width: '24px', 
                     height: '24px', 
                     borderRadius: '50%', 
-                    background: 'var(--emerald-main)', 
+                    background: 'var(--accent)', 
                     color: '#fff', 
                     fontSize: '0.75rem', 
                     fontWeight: 700, 
@@ -552,7 +554,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   }}>
                     4
                   </span>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
                     {language === 'ml' ? 'വിജയകരമായ പൂർത്തീകരണം (Refine & Output)' : '4. Final Refinement & Delivery'}
                   </span>
                 </div>
@@ -561,7 +563,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   SUCCESS
                 </span>
               </div>
-              <p className="font-ml" style={{ fontSize: '0.82rem', color: 'var(--emerald-light)', paddingLeft: '32px', fontWeight: 500 }}>
+              <p className="font-ml" style={{ fontSize: '0.82rem', color: 'var(--accent-d)', paddingLeft: '32px', fontWeight: 500 }}>
                 {language === 'ml' ? selectedLog.outputSummaryMl : selectedLog.outputSummary}
               </p>
             </div>
@@ -576,10 +578,10 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700 }}>
+            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--ink)' }}>
               {language === 'ml' ? 'സമീപകാല പ്രവർത്തന ചരിത്രം' : 'Recent Store Actions History'}
             </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
               {language === 'ml' 
                 ? 'നിങ്ങളുടെ കടയിലെ പൂർത്തിയായ പ്രവർത്തനങ്ങളുടെ വിവരങ്ങൾ സുരക്ഷിതമായി രേഖപ്പെടുത്തിയിരിക്കുന്നു' 
                 : 'Completed operations and verified actions securely logged for your store'}
@@ -587,16 +589,16 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Filter size={14} color="var(--text-muted)" />
+            <Filter size={14} color="var(--muted)" />
             <select
               value={filterTool}
               onChange={(e) => setFilterTool(e.target.value)}
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: '#fff',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '6px 10px',
+                background: 'var(--surface)',
+                color: 'var(--ink)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--radius-full)',
+                padding: '6px 12px',
                 fontSize: '0.8rem',
                 outline: 'none'
               }}
@@ -613,7 +615,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+              <tr style={{ borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--muted)' }}>
                 <th style={{ padding: '10px 14px' }}>Task ID</th>
                 <th style={{ padding: '10px 14px' }}>Input Command (Malayalam)</th>
                 <th style={{ padding: '10px 14px' }}>Tool Used</th>
@@ -629,19 +631,19 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                   key={log.id}
                   onClick={() => setSelectedLog(log)}
                   style={{ 
-                    borderBottom: '1px solid var(--border-subtle)',
+                    borderBottom: '1px solid var(--line)',
                     cursor: 'pointer',
-                    background: selectedLog.id === log.id ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
+                    background: selectedLog.id === log.id ? 'var(--soft)' : 'transparent'
                   }}
                 >
-                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#a5b4fc' }}>
+                  <td style={{ padding: '12px 14px', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--accent-d)' }}>
                     #{log.id}
                   </td>
                   <td style={{ padding: '12px 14px', maxWidth: '300px' }}>
-                    <p className="font-ml" style={{ fontWeight: 600, color: '#fff' }}>
+                    <p className="font-ml" style={{ fontWeight: 600, color: 'var(--ink)' }}>
                       {log.inputPromptMl || log.inputPrompt}
                     </p>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
                       {log.inputPrompt}
                     </p>
                   </td>
@@ -650,10 +652,10 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                       {log.toolUsed}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 14px', color: 'var(--emerald-light)', fontWeight: 600 }}>
+                  <td style={{ padding: '12px 14px', color: 'var(--accent-d)', fontWeight: 600 }}>
                     {log.confidence}%
                   </td>
-                  <td style={{ padding: '12px 14px', color: 'var(--text-secondary)' }}>
+                  <td style={{ padding: '12px 14px', color: 'var(--muted)' }}>
                     {log.executionTimeMs}ms
                   </td>
                   <td style={{ padding: '12px 14px' }}>

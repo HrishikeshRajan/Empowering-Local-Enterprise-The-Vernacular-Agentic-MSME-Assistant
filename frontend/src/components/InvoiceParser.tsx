@@ -53,8 +53,8 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
       {/* Header Info Banner */}
       <div className="glass-panel" style={{ 
         padding: '24px', 
-        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-        border: '1px solid var(--border-subtle)'
+        background: 'linear-gradient(135deg, #e7f5ec 0%, #f0f6f1 100%)',
+        border: '1px solid var(--line)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
@@ -67,12 +67,12 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
                 {language === 'ml' ? '98.7% കൃത്യത' : '98.7% Accuracy'}
               </span>
             </div>
-            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--ink)' }}>
               {language === 'ml' 
                 ? 'സപ്ലയർ ബില്ലുകൾ & ഇൻവോയ്സ് വായന' 
                 : 'Smart Document & Supplier Invoice Reader'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '780px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--muted)', fontSize: '0.92rem', maxWidth: '780px', marginTop: '4px' }}>
               {language === 'ml'
                 ? 'സപ്ലയർമാർ തരുന്ന ബില്ലിന്റെയോ റസീറ്റിന്റെയോ ഫോട്ടോ എടുത്താൽ മതി! ഉൽപ്പന്നങ്ങളുടെ പേര്, അളവ്, ജിഎസ്ടി, ആകെ തുക എന്നിവ കൃത്യമായി വായിച്ച് സ്റ്റോക്കിലേക്ക് സ്വയം മാറ്റും.'
                 : 'Snap or upload supplier receipts and tax bills. All item names, quantities, and GST calculations are read automatically and double-checked for zero mathematical errors.'}
@@ -102,8 +102,8 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={18} color="var(--saffron-light)" />
+            <h3 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} color="var(--accent-d)" />
               {language === 'ml' ? 'യഥാർത്ഥ ഇൻവോയ്സ് രേഖ' : 'Original Invoice Document'}
             </h3>
             <span className="glass-badge glass-badge-emerald">
@@ -116,9 +116,9 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
             position: 'relative', 
             borderRadius: 'var(--radius-md)', 
             overflow: 'hidden', 
-            border: '1px solid var(--border-subtle)',
-            backgroundColor: '#000',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)'
+            border: '1px solid var(--line)',
+            backgroundColor: 'var(--surface)',
+            boxShadow: 'var(--shadow)'
           }}>
             <img 
               src={invoice.imageUrl} 
@@ -256,21 +256,21 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
           <div style={{ 
             padding: '16px', 
             borderRadius: 'var(--radius-md)', 
-            background: 'rgba(16, 185, 129, 0.08)',
-            border: '1px solid var(--border-glow)'
+            background: 'var(--soft)',
+            border: '1px solid rgba(63, 122, 92, 0.25)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <ShieldCheck size={18} color="var(--emerald-light)" />
-              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--emerald-light)' }}>
+              <ShieldCheck size={18} color="var(--accent-d)" />
+              <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--accent-d)' }}>
                 {language === 'ml' ? 'കണക്കുകൂട്ടൽ പരിശോധന (Exact Match)' : 'Calculation & GST Check (Exact Match)'}
               </span>
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.5 }}>
               ∑ Line Items (₹32,250.00) + CGST 9% (₹2,902.50) + SGST 9% (₹2,902.50) = <strong>₹38,055.00</strong>
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', fontSize: '0.75rem' }}>
-              <span style={{ color: 'var(--emerald-light)' }}>✓ Variance: ₹0.00 (Tolerance ±₹1.00)</span>
-              <span style={{ color: 'var(--emerald-light)' }}>✓ GST 18% Verified</span>
+              <span style={{ color: 'var(--accent-d)', fontWeight: 600 }}>✓ Variance: ₹0.00 (Tolerance ±₹1.00)</span>
+              <span style={{ color: 'var(--accent-d)', fontWeight: 600 }}>✓ GST 18% Verified</span>
             </div>
           </div>
 
@@ -278,31 +278,31 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
           <div style={{ 
             padding: '14px', 
             borderRadius: 'var(--radius-md)', 
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid var(--border-subtle)'
+            background: 'var(--tint)',
+            border: '1px solid var(--line)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Vendor</span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--emerald-light)' }}>Confidence: 99.4%</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase' }}>Vendor</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent-d)', fontWeight: 600 }}>Confidence: 99.4%</span>
             </div>
-            <p className="font-ml" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+            <p className="font-ml" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)' }}>
               {invoice.vendorName} ({invoice.vendorNameMl})
             </p>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              GSTIN: <span style={{ fontFamily: 'var(--font-mono)', color: '#c7d2fe' }}>{invoice.vendorGstin}</span> • {invoice.vendorAddress}
+            <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '2px' }}>
+              GSTIN: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-d)', fontWeight: 600 }}>{invoice.vendorGstin}</span> • {invoice.vendorAddress}
             </p>
           </div>
 
           {/* Extracted Line Items Table */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>
               {language === 'ml' ? 'ഉൽപ്പന്നങ്ങൾ (Extracted Line Items - 5 Rows)' : 'Extracted Commodities (5 Items)'}
             </span>
 
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--muted)' }}>
                     <th style={{ padding: '6px 8px' }}>Item (മലയാളം)</th>
                     <th style={{ padding: '6px 8px' }}>HSN</th>
                     <th style={{ padding: '6px 8px' }}>Qty</th>
@@ -312,22 +312,22 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
                 </thead>
                 <tbody>
                   {invoice.items.map((item) => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <tr key={item.id} style={{ borderBottom: '1px solid var(--line)' }}>
                       <td style={{ padding: '8px' }}>
-                        <p className="font-ml" style={{ fontWeight: 600, color: '#fff' }}>
+                        <p className="font-ml" style={{ fontWeight: 600, color: 'var(--ink)' }}>
                           {item.nameMl}
                         </p>
                       </td>
-                      <td style={{ padding: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--muted)' }}>
                         {item.hsn}
                       </td>
-                      <td style={{ padding: '8px', color: '#fff', fontWeight: 600 }}>
+                      <td style={{ padding: '8px', color: 'var(--ink)', fontWeight: 600 }}>
                         {item.qty}
                       </td>
-                      <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '8px', color: 'var(--muted)' }}>
                         ₹{item.rate.toLocaleString('en-IN')}
                       </td>
-                      <td style={{ padding: '8px', textAlign: 'right', color: 'var(--emerald-light)', fontWeight: 600 }}>
+                      <td style={{ padding: '8px', textAlign: 'right', color: 'var(--accent-d)', fontWeight: 600 }}>
                         ₹{item.amount.toLocaleString('en-IN')}
                       </td>
                     </tr>
@@ -341,36 +341,37 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
           <div style={{ 
             padding: '14px', 
             borderRadius: 'var(--radius-md)', 
-            background: 'rgba(0, 0, 0, 0.3)',
+            background: 'var(--tint)',
+            border: '1px solid var(--line)',
             display: 'flex',
             flexDirection: 'column',
             gap: '6px',
             fontSize: '0.85rem'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}>
               <span>Sub Total (തുക)</span>
               <span>₹{invoice.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}>
               <span>CGST (9%)</span>
               <span>₹{invoice.cgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}>
               <span>SGST (9%)</span>
               <span>₹{invoice.sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
-              color: '#fff', 
-              fontWeight: 800, 
+              color: 'var(--ink)', 
+              fontWeight: 700, 
               fontSize: '1.05rem', 
-              borderTop: '1px solid var(--border-subtle)',
+              borderTop: '1px solid var(--line)',
               paddingTop: '8px',
               marginTop: '4px'
             }}>
               <span>Grand Total (ആകെ തുക)</span>
-              <span style={{ color: 'var(--emerald-light)' }}>
+              <span style={{ color: 'var(--accent-d)' }}>
                 ₹{invoice.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>

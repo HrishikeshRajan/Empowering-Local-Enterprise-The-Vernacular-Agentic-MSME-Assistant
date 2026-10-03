@@ -47,8 +47,8 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
       {/* Top Banner */}
       <div className="glass-panel" style={{ 
         padding: '24px', 
-        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)',
-        border: '1px solid var(--border-subtle)'
+        background: 'linear-gradient(135deg, #e7f5ec 0%, #f0f6f1 100%)',
+        border: '1px solid var(--line)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
@@ -64,12 +64,12 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
                 </span>
               )}
             </div>
-            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--ink)' }}>
               {language === 'ml' 
                 ? 'സ്റ്റോക്ക് & ഉൽപ്പന്ന മാനേജ്‌മെന്റ്' 
                 : 'Inventory & Commodities Management'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '780px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--muted)', fontSize: '0.92rem', maxWidth: '780px', marginTop: '4px' }}>
               {language === 'ml'
                 ? 'സ്റ്റോക്ക് തീരാറാകുമ്പോൾ ഏജന്റ് സ്വയം മുന്നറിയിപ്പ് നൽകുന്നു. ഒരൊറ്റ ക്ലിക്കിലൂടെയോ ശബ്ദ നിർദ്ദേശത്തിലൂടെയോ മൊത്തക്കച്ചവടക്കാരന് WhatsApp വഴി ഓർഡർ നൽകാം.'
                 : 'Real-time inventory levels synced automatically via voice commands and invoice scans. Trigger supplier restocking orders over WhatsApp with one click.'}
@@ -92,7 +92,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
       {/* Filter and Search Bar */}
       <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '260px' }}>
-          <Search size={18} color="var(--text-muted)" />
+          <Search size={18} color="var(--muted)" />
           <input 
             type="text"
             value={searchQuery}
@@ -101,7 +101,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#fff',
+              color: 'var(--ink)',
               fontSize: '0.9rem',
               width: '100%',
               outline: 'none'
@@ -115,13 +115,14 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               style={{
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
                 border: '1px solid',
-                borderColor: selectedCategory === cat ? 'var(--emerald-main)' : 'var(--border-subtle)',
-                background: selectedCategory === cat ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                color: selectedCategory === cat ? 'var(--emerald-light)' : 'var(--text-secondary)',
+                borderColor: selectedCategory === cat ? 'var(--line)' : 'transparent',
+                background: selectedCategory === cat ? 'var(--soft)' : 'var(--tint)',
+                color: selectedCategory === cat ? 'var(--accent-d)' : 'var(--muted)',
                 fontSize: '0.78rem',
+                fontWeight: selectedCategory === cat ? 600 : 500,
                 textTransform: 'capitalize',
                 cursor: 'pointer'
               }}
@@ -147,7 +148,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '14px',
-                border: isLowStock ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid var(--border-subtle)'
+                border: isLowStock ? '1px solid #f6cfcf' : '1px solid var(--line)'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -155,22 +156,22 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
                   <span className="glass-badge glass-badge-indigo" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>
                     {language === 'ml' ? item.categoryMl : item.category}
                   </span>
-                  <h3 className="font-ml" style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
+                  <h3 className="font-ml" style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>
                     {item.nameMl}
                   </h3>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
                     {item.name}
                   </p>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--emerald-light)' }}>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-d)' }}>
                     ₹{item.unitPrice}
                   </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
                     /{item.unit}
                   </span>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '2px' }}>
                     Cost: ₹{item.costPrice}
                   </p>
                 </div>
@@ -179,26 +180,26 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
               {/* Stock Gauge / Progress Bar */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '6px' }}>
-                  <span style={{ color: isLowStock ? '#fda4af' : 'var(--text-secondary)', fontWeight: 600 }}>
+                  <span style={{ color: isLowStock ? 'var(--rose-main)' : 'var(--muted)', fontWeight: 600 }}>
                     {isLowStock ? '⚠️ Low Stock Alert' : 'Stock In Hand'}
                   </span>
-                  <span style={{ fontWeight: 700, color: '#fff' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
                     {item.currentStock} {item.unit} (Min: {item.reorderLevel} {item.unit})
                   </span>
                 </div>
 
-                <div style={{ height: '8px', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.1)', overflow: 'hidden' }}>
+                <div style={{ height: '8px', borderRadius: '4px', backgroundColor: 'var(--tint)', overflow: 'hidden' }}>
                   <div style={{ 
                     height: '100%', 
                     width: `${percentage}%`, 
-                    backgroundColor: isLowStock ? 'var(--rose-main)' : 'var(--emerald-main)',
+                    backgroundColor: isLowStock ? 'var(--rose-main)' : 'var(--accent)',
                     borderRadius: '4px',
                     transition: 'width 0.4s ease'
                   }} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--muted)', borderTop: '1px solid var(--line)', paddingTop: '10px' }}>
                 <span>Restocked: {item.lastRestocked}</span>
                 
                 <button
@@ -207,7 +208,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
                   className="btn-secondary"
                   style={{ padding: '6px 12px', fontSize: '0.72rem', gap: '6px' }}
                 >
-                  <Send size={12} color="var(--emerald-light)" />
+                  <Send size={12} color="var(--accent-d)" />
                   <span className="font-ml">
                     {restockedItemId === item.id 
                       ? 'ഓർഡർ ചെയ്യുന്നു...' 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Language, NavTab } from './types';
+import './styles/dashboard.css';
 import { LandingPage } from './components/LandingPage';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -12,31 +13,67 @@ import { InventoryManager } from './components/InventoryManager';
 import { Appointments } from './components/Appointments';
 import { StoreSettings } from './components/StoreSettings';
 import { VoiceModal } from './components/VoiceModal';
+import { KadaIconSprite } from './components/ui';
+
+function isDashboardRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  return path.startsWith('/dashboard') || hash.includes('dashboard') || hash.includes('app');
+}
 
 export function App() {
-  const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing');
+  const [viewMode, setViewMode] = useState<'landing' | 'app'>(() => isDashboardRoute() ? 'app' : 'landing');
   const [currentTab, setCurrentTab] = useState<NavTab>('overview');
   const [language, setLanguage] = useState<Language>('ml');
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
-  const handleVoiceCommandSelected = (_cmdText: string) => {
+  useEffect(() => {
+    const handlePopState = () => {
+      const dashboard = isDashboardRoute();
+      setViewMode(dashboard ? 'app' : 'landing');
+      if (dashboard) document.documentElement.classList.remove('kada-lock');
+    };
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    if (isDashboardRoute()) document.documentElement.classList.remove('kada-lock');
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
+
+  const handleLaunchApp = () => {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+      window.history.pushState({}, '', '/dashboard');
+    }
+    document.documentElement.classList.remove('kada-lock');
     setViewMode('app');
+  };
+
+  const handleBackToLanding = () => {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
+    setViewMode('landing');
+  };
+
+  const handleVoiceCommandSelected = (_cmdText: string) => {
+    handleLaunchApp();
     setCurrentTab('voice-agent');
   };
 
-  // If in Landing Page view mode, render the rich public landing page
   if (viewMode === 'landing') {
     return (
       <>
-        <LandingPage 
+        <KadaIconSprite />
+        <LandingPage
           language={language}
           onLanguageChange={setLanguage}
-          onLaunchApp={() => setViewMode('app')}
+          onLaunchApp={handleLaunchApp}
           onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
         />
-
-        {/* Global Quick Voice Modal */}
-        <VoiceModal 
+        <VoiceModal
           isOpen={isVoiceModalOpen}
           onClose={() => setIsVoiceModalOpen(false)}
           language={language}
@@ -46,91 +83,68 @@ export function App() {
     );
   }
 
-  // If in App view mode, render the merchant operations dashboard
   return (
-    <div className="app-container">
-      {/* Desktop Sidebar Navigation */}
-      <Sidebar 
-        currentTab={currentTab} 
-        onTabChange={setCurrentTab} 
-        language={language} 
-        onBackToLanding={() => setViewMode('landing')}
-      />
+    <>
+      <KadaIconSprite />
+      <div className="app">
+        {/* Ambient background (desktop) */}
+        <div className="aura" aria-hidden="true"><i /><i /><i /></div>
 
-      {/* Main Workspace Area */}
-      <main className="main-content">
-        {/* Top Navigation & Store Header */}
-        <Header 
+        {/* Sidebar (desktop ≥ 900 px) */}
+        <Sidebar
           currentTab={currentTab}
+          onTabChange={setCurrentTab}
           language={language}
-          onLanguageChange={setLanguage}
-          onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
-          onBackToLanding={() => setViewMode('landing')}
+          onBackToLanding={handleBackToLanding}
         />
 
-        {/* Tab Route Switching */}
-        {currentTab === 'overview' && (
-          <Overview 
+        {/* Main column */}
+        <div>
+          {/* Top bar (mobile) */}
+          <Header
+            currentTab={currentTab}
             language={language}
-            onNavigate={setCurrentTab}
+            onLanguageChange={setLanguage}
             onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
+            onBackToLanding={handleBackToLanding}
           />
-        )}
 
-        {currentTab === 'voice-agent' && (
-          <VoiceAgent 
-            language={language}
-          />
-        )}
+          <main className="main">
+            {currentTab === 'overview' && (
+              <Overview
+                language={language}
+                onNavigate={setCurrentTab}
+                onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
+              />
+            )}
+            {currentTab === 'whatsapp' && <WhatsAppHub language={language} />}
+            {currentTab === 'invoices' && <InvoiceParser language={language} />}
+            {currentTab === 'voice-agent' && <VoiceAgent language={language} />}
+            {currentTab === 'inventory' && (
+              <InventoryManager language={language} onOpenVoiceModal={() => setIsVoiceModalOpen(true)} />
+            )}
+            {currentTab === 'appointments' && <Appointments language={language} />}
+            {currentTab === 'settings' && <StoreSettings language={language} />}
+          </main>
+        </div>
+      </div>
 
-        {currentTab === 'invoices' && (
-          <InvoiceParser 
-            language={language}
-          />
-        )}
-
-        {currentTab === 'whatsapp' && (
-          <WhatsAppHub 
-            language={language}
-          />
-        )}
-
-        {currentTab === 'inventory' && (
-          <InventoryManager 
-            language={language}
-            onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
-          />
-        )}
-
-        {currentTab === 'appointments' && (
-          <Appointments 
-            language={language}
-          />
-        )}
-
-        {currentTab === 'settings' && (
-          <StoreSettings 
-            language={language}
-          />
-        )}
-      </main>
-
-      {/* Thumb-Friendly Mobile Bottom Navigation */}
-      <MobileBottomNav 
+      {/* Bottom nav (mobile) */}
+      <MobileBottomNav
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         language={language}
         onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
       />
 
-      {/* Floating Quick Voice Modal */}
-      <VoiceModal 
+      {/* Voice sheet */}
+      <VoiceModal
         isOpen={isVoiceModalOpen}
         onClose={() => setIsVoiceModalOpen(false)}
         language={language}
         onSelectCommand={handleVoiceCommandSelected}
       />
-    </div>
+    </>
   );
 }
 

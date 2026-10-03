@@ -64,13 +64,13 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
       {/* Top Banner */}
       <div className="glass-panel" style={{ 
         padding: '24px', 
-        background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-        border: '1px solid rgba(37, 211, 102, 0.25)'
+        background: 'linear-gradient(135deg, #e7f5ec 0%, #f0f6f1 100%)',
+        border: '1px solid var(--line)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="glass-badge" style={{ backgroundColor: 'rgba(37, 211, 102, 0.15)', color: '#25d366', borderColor: 'rgba(37, 211, 102, 0.4)' }}>
+              <span className="glass-badge glass-badge-emerald">
                 <MessageSquare size={14} />
                 {language === 'ml' ? 'വാട്സ്ആപ്പ് ബിസിനസ് കണക്റ്റഡ്' : 'WhatsApp Business Connected'}
               </span>
@@ -78,19 +78,19 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                 {language === 'ml' ? '24 മണിക്കൂറും സജീവം' : 'Active 24/7'}
               </span>
             </div>
-            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--ink)' }}>
               {language === 'ml' 
                 ? 'വാട്സ്ആപ്പ് ബിസിനസ് & ഓർഡർ ഹബ്ബ്' 
                 : 'Automated WhatsApp Business & Customer Hub'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '780px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--muted)', fontSize: '0.92rem', maxWidth: '780px', marginTop: '4px' }}>
               {language === 'ml'
                 ? 'ഉപഭോക്താക്കൾ അയക്കുന്ന മലയാളം ചോദ്യങ്ങൾക്ക് സ്വയമേവ മറുപടി നൽകുകയും, ഇൻവോയ്സ് അയക്കുകയും, UPI പേയ്മെന്റ് ലിങ്കുകൾ ഉടൻ പങ്കുവെക്കുകയും ചെയ്യുന്നു.'
                 : 'Instant automated customer service in Malayalam and English. Answers price inquiries, sends digital bills, and shares instant UPI QR payment links directly in chat.'}
             </p>
           </div>
 
-          <div className="glass-badge" style={{ padding: '8px 14px', background: 'rgba(37, 211, 102, 0.12)', color: '#25d366' }}>
+          <div className="glass-badge glass-badge-emerald" style={{ padding: '8px 14px' }}>
             <Clock size={14} />
             <span>{language === 'ml' ? 'കസ്റ്റമർ ചാറ്റ് സജീവം' : 'Customer Session: Active'}</span>
           </div>
@@ -102,8 +102,8 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
         
         {/* Contact List */}
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
-            <h3 className="font-display" style={{ fontSize: '1rem', fontWeight: 700 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--line)' }}>
+            <h3 className="font-display" style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>
               {language === 'ml' ? 'ഉപഭോക്താക്കൾ (Chats)' : 'Active Conversations'}
             </h3>
             <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.68rem' }}>
@@ -125,23 +125,24 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                     padding: '12px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid',
-                    borderColor: isSelected ? 'rgba(37, 211, 102, 0.4)' : 'transparent',
-                    background: isSelected ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                    borderColor: isSelected ? 'var(--line)' : 'transparent',
+                    background: isSelected ? 'var(--soft)' : 'transparent',
                     textAlign: 'left',
-                    color: 'var(--text-primary)',
+                    color: 'var(--ink)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
                   }}
                 >
                   <div style={{ 
-                    width: '42px', 
-                    height: '42px', 
-                    borderRadius: '50%', 
-                    background: 'linear-gradient(135deg, #128c7e 0%, #075e54 100%)',
+                    width: '40px', 
+                    height: '40px', 
+                    borderRadius: '50% 50% 50% 12%', 
+                    background: isSelected ? 'var(--accent)' : 'var(--tint)',
+                    border: '1px solid var(--line)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#fff',
+                    color: isSelected ? '#fff' : 'var(--accent-d)',
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     flexShrink: 0
@@ -150,21 +151,21 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                      <span className="font-ml" style={{ fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span className="font-ml" style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {chat.customerName}
                       </span>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>
                         {chat.lastMessageTime}
                       </span>
                     </div>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {chat.messages[chat.messages.length - 1]?.text}
                     </p>
                   </div>
                   {chat.unreadCount > 0 && (
                     <span style={{
-                      backgroundColor: '#25d366',
-                      color: '#000',
+                      backgroundColor: 'var(--accent)',
+                      color: '#fff',
                       borderRadius: '50%',
                       width: '18px',
                       height: '18px',
@@ -188,25 +189,25 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
           display: 'flex', 
           flexDirection: 'column', 
           overflow: 'hidden',
-          background: '#0b141a',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
+          background: 'var(--surface)',
+          border: '1px solid var(--line)'
         }}>
           
           {/* WhatsApp Header */}
           <div style={{ 
             padding: '12px 20px', 
-            backgroundColor: '#202c33', 
+            backgroundColor: 'var(--surface)', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+            borderBottom: '1px solid var(--line)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ 
                 width: '40px', 
                 height: '40px', 
-                borderRadius: '50%', 
-                background: '#128c7e',
+                borderRadius: '50% 50% 50% 12%', 
+                background: 'var(--accent)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -216,20 +217,20 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                 {selectedChat.customerName.charAt(0)}
               </div>
               <div>
-                <h4 className="font-ml" style={{ fontSize: '0.95rem', fontWeight: 600, color: '#e9edef' }}>
+                <h4 className="font-ml" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>
                   {selectedChat.customerName}
                 </h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.72rem', color: '#8696a0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.72rem', color: 'var(--muted)' }}>
                   <span>{selectedChat.customerPhone}</span>
                   <span>•</span>
-                  <span style={{ color: '#25d366' }}>
+                  <span style={{ color: 'var(--accent-d)', fontWeight: 500 }}>
                     {selectedChat.isSessionActive ? `⏳ Session active (${selectedChat.sessionExpiryHours}h left)` : 'Template required'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#aebac1' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--muted)' }}>
               <Phone size={18} style={{ cursor: 'pointer' }} />
               <Video size={18} style={{ cursor: 'pointer' }} />
               <MoreVertical size={18} style={{ cursor: 'pointer' }} />
@@ -244,12 +245,13 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
             display: 'flex', 
             flexDirection: 'column', 
             gap: '12px',
-            backgroundImage: 'radial-gradient(#1f2c34 1px, transparent 1px)',
+            backgroundColor: 'var(--tint)',
+            backgroundImage: 'radial-gradient(var(--line) 1px, transparent 1px)',
             backgroundSize: '16px 16px'
           }}>
             
             {/* Session Info Badge */}
-            <div style={{ alignSelf: 'center', padding: '4px 12px', borderRadius: 'var(--radius-sm)', background: '#182229', fontSize: '0.7rem', color: '#8696a0', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ alignSelf: 'center', padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'var(--surface)', fontSize: '0.72rem', color: 'var(--muted)', border: '1px solid var(--line)', boxShadow: '0 1px 3px rgba(27,42,35,0.04)' }}>
               🔒 Messages are end-to-end encrypted • Vernacular Assistant Connected
             </div>
 
@@ -261,17 +263,18 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                   style={{
                     alignSelf: isAgent ? 'flex-end' : 'flex-start',
                     maxWidth: '82%',
-                    backgroundColor: isAgent ? '#005c4b' : '#202c33',
-                    color: '#e9edef',
+                    backgroundColor: isAgent ? 'var(--accent)' : 'var(--surface)',
+                    color: isAgent ? '#ffffff' : 'var(--ink)',
                     padding: '10px 14px',
-                    borderRadius: isAgent ? '12px 0 12px 12px' : '0 12px 12px 12px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4)',
+                    borderRadius: isAgent ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
+                    boxShadow: isAgent ? '0 4px 14px rgba(63, 122, 92, 0.2)' : '0 1px 3px rgba(27, 42, 35, 0.05)',
+                    border: isAgent ? 'none' : '1px solid var(--line)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '6px'
                   }}
                 >
-                  <p className="font-ml" style={{ fontSize: '0.875rem', lineHeight: 1.45 }}>
+                  <p className="font-ml" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
                     {msg.text}
                   </p>
 
@@ -279,20 +282,20 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                   {msg.hasPaymentLink && (
                     <div style={{ 
                       marginTop: '6px', 
-                      padding: '10px', 
+                      padding: '10px 14px', 
                       borderRadius: '8px', 
-                      background: 'rgba(0, 0, 0, 0.25)', 
-                      border: '1px solid rgba(37, 211, 102, 0.3)',
+                      background: isAgent ? 'rgba(255, 255, 255, 0.15)' : 'var(--soft)', 
+                      border: isAgent ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(63, 122, 92, 0.25)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: '10px'
                     }}>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: '#25d366', fontWeight: 700 }}>
+                        <span style={{ fontSize: '0.7rem', color: isAgent ? '#e3efe7' : 'var(--accent-d)', fontWeight: 700 }}>
                           RAZORPAY UPI INSTANT PAY
                         </span>
-                        <p style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff' }}>
+                        <p style={{ fontSize: '0.95rem', fontWeight: 700, color: isAgent ? '#ffffff' : 'var(--ink)' }}>
                           ₹{msg.paymentAmount?.toLocaleString('en-IN')}
                         </p>
                       </div>
@@ -307,13 +310,14 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                           alignItems: 'center',
                           gap: '6px',
                           padding: '6px 12px',
-                          background: '#25d366',
-                          color: '#000',
+                          background: isAgent ? '#ffffff' : 'var(--accent)',
+                          color: isAgent ? 'var(--accent-d)' : '#ffffff',
                           border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: 700,
+                          borderRadius: 'var(--radius-full)',
+                          fontWeight: 600,
                           fontSize: '0.75rem',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
                         }}
                       >
                         <QrCode size={14} />
@@ -322,9 +326,9 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', fontSize: '0.65rem', color: '#8696a0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', fontSize: '0.68rem', color: isAgent ? 'rgba(255, 255, 255, 0.85)' : 'var(--muted)' }}>
                     <span>{msg.time}</span>
-                    {isAgent && <CheckCheck size={14} color="#53bdeb" />}
+                    {isAgent && <CheckCheck size={14} color="#e3efe7" />}
                   </div>
                 </div>
               );
@@ -332,28 +336,28 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
           </div>
 
           {/* Quick Vernacular Actions */}
-          <div style={{ padding: '8px 16px', backgroundColor: '#111b21', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', gap: '8px', overflowX: 'auto' }}>
-            <span style={{ fontSize: '0.72rem', color: '#8696a0', alignSelf: 'center', flexShrink: 0 }}>
+          <div style={{ padding: '10px 16px', backgroundColor: 'var(--surface)', borderTop: '1px solid var(--line)', display: 'flex', gap: '8px', overflowX: 'auto' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--muted)', alignSelf: 'center', flexShrink: 0 }}>
               Quick Templates:
             </span>
             <button
               onClick={() => handleQuickTemplate('ഇൻവോയ്സ് MS/23-24/1156 തുക ₹38,055 അയച്ചിട്ടുണ്ട്.')}
               className="font-ml"
-              style={{ padding: '4px 10px', borderRadius: '14px', background: '#202c33', color: '#e9edef', border: 'none', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
               📄 ബിൽ അയക്കുക
             </button>
             <button
               onClick={() => handleQuickTemplate('നന്ദി! നിങ്ങളുടെ ഓർഡർ പാക്കിംഗ് പൂർത്തിയായി വരുന്നു.')}
               className="font-ml"
-              style={{ padding: '4px 10px', borderRadius: '14px', background: '#202c33', color: '#e9edef', border: 'none', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
               📦 ഓർഡർ സ്ഥിരീകരണം
             </button>
             <button
               onClick={() => handleQuickTemplate('ദയവായി തുക താഴെ കാണുന്ന UPI ലിങ്ക് വഴി നൽകുമല്ലോ.')}
               className="font-ml"
-              style={{ padding: '4px 10px', borderRadius: '14px', background: '#202c33', color: '#e9edef', border: 'none', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
               💳 UPI പേയ്മെന്റ് ലിങ്ക്
             </button>
@@ -364,13 +368,14 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
             onSubmit={handleSendMessage}
             style={{ 
               padding: '12px 16px', 
-              backgroundColor: '#202c33', 
+              backgroundColor: 'var(--surface)', 
+              borderTop: '1px solid var(--line)',
               display: 'flex', 
               alignItems: 'center', 
               gap: '12px' 
             }}
           >
-            <Paperclip size={20} color="#8696a0" style={{ cursor: 'pointer' }} />
+            <Paperclip size={20} color="var(--muted)" style={{ cursor: 'pointer' }} />
             
             <input 
               type="text" 
@@ -380,10 +385,10 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                borderRadius: '8px',
-                background: '#2a3942',
-                border: 'none',
-                color: '#e9edef',
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--tint)',
+                border: '1px solid var(--line)',
+                color: 'var(--ink)',
                 fontSize: '0.875rem',
                 outline: 'none'
               }}
@@ -396,13 +401,14 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: replyText.trim() ? '#00a884' : '#2a3942',
-                color: replyText.trim() ? '#fff' : '#8696a0',
+                background: replyText.trim() ? 'var(--accent)' : 'var(--tint)',
+                color: replyText.trim() ? '#fff' : 'var(--muted)',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: replyText.trim() ? 'pointer' : 'default'
+                cursor: replyText.trim() ? 'pointer' : 'default',
+                boxShadow: replyText.trim() ? '0 4px 12px rgba(63, 122, 92, 0.25)' : 'none'
               }}
             >
               <Send size={18} />

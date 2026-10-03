@@ -1,18 +1,8 @@
-/**
- * LandingPage.tsx
- *
- * Exact 1:1 React port of landing.html.
- * Upholds AGENTS.md architectural rules:
- *  - Scalability: Uses identical CSS custom-property tokens (--bg, --surface, --accent, etc.).
- *  - Modularity: Clean separation between canvas rendering, phone demo loop, and GSAP triggers.
- *  - Testability: buildScenes() is a pure export; data-testid attributes on all interactive elements.
- *  - Reliability: Defensive styles on #cvHost ensure the workflow canvas never collapses or misplaces nodes.
- */
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { Language } from '../types';
+import { KadaIntro } from './KadaIntro';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,88 +13,152 @@ interface LandingPageProps {
   onOpenVoiceModal: () => void;
 }
 
-// ─── Pure scene data for phone demo ─────────────────────────────────────────
-const WAVE = '<div class="wave"><s></s><s></s><s></s><s></s><s></s><s></s><s></s><s></s><s></s><s></s></div>';
+// ─── Hero: Demo phone scenes ─────────────────────────────────────────────────
+type SceneItem = [string, string | [string, string][]];
+const SCENES: SceneItem[][] = [
+  [['in', 'voice'], ['in ml', 'നാളെ രാവിലെ 10 മണിക്ക് 2 പേർക്ക് ഫിറ്റിംഗ് വേണം'],
+   ['code', '{ "intent": "booking",\n  "time": "tomorrow 10:00",\n  "guests": 2 }'], ['out', 'Booked for tomorrow, 10:00 ✓']],
+  [['in', 'Photo: supplier receipt'],
+   ['bill', [['Rice 50 kg', '₹2,400'], ['Sugar 25 kg', '₹1,100'], ['Oil 10 L', '₹1,320']]],
+   ['out', 'Bill logged. Rice stock updated.']],
+  [['in', 'Do you stitch blouses by Saturday? Price?'],
+   ['out', 'Yes. Blouse stitching is ₹450, ready in 3 days. Shall I book a fitting?'],
+   ['in', 'Yes, tomorrow 4 pm'], ['code', 'Lead alert sent to owner'], ['out', 'Booked for tomorrow, 4:00 pm ✓']],
+];
+const TABS = ['Voice note', 'Bill', 'WhatsApp'];
+const LIVE_ITEMS = [
+  'Booking a fitting for tomorrow, 10:00',
+  'Reading a supplier bill: 4,820',
+  'Replying to a price question on WhatsApp',
+  'Rice stock is low. Reorder drafted.',
+  'Lead alert sent to the owner',
+];
 
-function buildScenes() {
-  return [
-    [
-      ['in', `<div class="voice">▶ ${WAVE} 0:07</div>`],
-      ['in ml', 'നാളെ രാവിലെ 10 മണിക്ക് 2 പേർക്ക് ഫിറ്റിംഗ് വേണം'],
-      ['code', '{ "intent": "booking",\n  "time": "tomorrow 10:00",\n  "guests": 2 }'],
-      ['out ml', 'ബുക്കിംഗ് സ്ഥിരീകരിച്ചു ✓ നാളെ 10:00. നന്ദി!'],
-    ],
-    [
-      ['in', 'Photo: supplier receipt'],
-      ['bill', '<div><span>Rice 50 kg</span><span>₹2,400</span></div><div><span>Sugar 25 kg</span><span>₹1,100</span></div><div><span>Oil 10 L</span><span>₹1,320</span></div><div class="tot"><span>Total</span><span>₹4,820</span></div>'],
-      ['out', 'Saved to purchases. Stock updated ✓'],
-    ],
-    [
-      ['in', 'Do you stitch blouses by Saturday? Price?'],
-      ['out', 'Yes. Blouse stitching is ₹450, ready in 3 days. Shall I book a fitting?'],
-      ['in', 'Yes, tomorrow 4 pm'],
-      ['code', 'Lead alert sent to owner'],
-      ['out', 'Booked for tomorrow, 4:00 pm ✓'],
-    ],
-  ] as [string, string][][];
+function Msg({ t, v }: { t: string; v: string | [string, string][] }) {
+  if (t === 'code') return <div className="dm-code dm-pop">{v as string}</div>;
+  if (t === 'bill') {
+    const rows = v as [string, string][];
+    return (
+      <div className="dm-bill dm-pop">
+        {rows.map(([a, b]) => <div key={a}><span>{a}</span><span>{b}</span></div>)}
+        <div className="tot"><span>Total</span><span>₹4,820</span></div>
+      </div>
+    );
+  }
+  if (v === 'voice') return (
+    <div className="dm in dm-pop">
+      <div className="dm-voice">▶ <span className="dm-wave">{Array.from({ length: 10 }, (_, i) => <s key={i} />)}</span> 0:07</div>
+    </div>
+  );
+  return <div className={`dm ${t} dm-pop`}>{v as string}</div>;
+}
+
+function Demo() {
+  const [tab, setTab] = useState(0);
+  const [run, setRun] = useState(0);
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const n = SCENES[tab].length;
+    if (reduce) { setShown(n); return; }
+    setShown(0);
+    const t: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 0; i < n; i++) t.push(setTimeout(() => setShown(i + 1), 250 + i * 1000));
+    t.push(setTimeout(() => { setTab((x) => (x + 1) % SCENES.length); setRun((r) => r + 1); }, 250 + n * 1000 + 2400));
+    return () => t.forEach(clearTimeout);
+  }, [tab, run]);
+  return (
+    <div className="hx-phone"><div className="hx-screen">
+      <div className="hx-tabs" role="tablist" aria-label="Try a demo">
+        {TABS.map((l, i) => (
+          <button key={l} role="tab" aria-selected={tab === i} className="hx-tab"
+            onClick={() => { setTab(i); setRun((r) => r + 1); }}>{l}</button>
+        ))}
+      </div>
+      <div className="hx-scene" aria-live="polite">
+        {SCENES[tab].slice(0, shown).map(([t, v], i) => <Msg key={`${tab}-${run}-${i}`} t={t} v={v} />)}
+      </div>
+      <button className="hx-replay" onClick={() => setRun((r) => r + 1)}>Replay</button>
+    </div></div>
+  );
+}
+
+function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () => void }) {
+  const heroRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [liveIdx, setLiveIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setLiveIdx((x) => (x + 1) % LIVE_ITEMS.length), 2800);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const ok = matchMedia('(hover:hover) and (min-width:960px)').matches &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const h = heroRef.current, st = stageRef.current;
+    if (!ok || !h || !st) return;
+    const ph = st.querySelector<HTMLElement>('.hx-phone');
+    const move = (e: PointerEvent) => {
+      const r = h.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      st.style.setProperty('--px', x.toFixed(3)); st.style.setProperty('--py', y.toFixed(3));
+      ph?.style.setProperty('--ry', (-9 + x * 10).toFixed(2) + 'deg');
+      ph?.style.setProperty('--rx', (3 - y * 8).toFixed(2) + 'deg');
+    };
+    const leave = () => {
+      ['--px', '--py'].forEach((p) => st.style.removeProperty(p));
+      ph && ['--ry', '--rx'].forEach((p) => ph.style.removeProperty(p));
+    };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerleave', leave);
+    return () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerleave', leave); };
+  }, []);
+
+  const d = (i: number): React.CSSProperties => ({ '--i': i } as React.CSSProperties);
+  return (
+    <header ref={heroRef} className={`hero${ready ? ' in' : ''}`} id="top">
+      <div className="hx-copy">
+        <div className="hx-live hh" style={d(0)} aria-live="polite"><i /><span>{LIVE_ITEMS[liveIdx]}</span></div>
+        <h1 className="hh" style={d(1)}>Speak.<br /><span>Kada does the rest.</span></h1>
+        <p className="hx-ml hh" style={d(2)}>പറഞ്ഞാൽ മതി.</p>
+        <p className="hx-lead hh" style={d(3)}>Send a voice note in Malayalam. Your shop books customers, reads bills and answers WhatsApp, day and night.</p>
+        <div className="hx-cta hh" style={d(4)}>
+          <button className="kb kb-dark" data-testid="cta-hero" onClick={onLaunchApp}>
+            Start free setup
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+          <a className="kb kb-ghost" href="#how">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z" /></svg>
+            Watch how it works
+          </a>
+        </div>
+        <ul className="hx-trust hh" style={d(5)}><li>WhatsApp</li><li>Malayalam + English</li><li>GST bills</li><li>24/7</li></ul>
+      </div>
+      <div ref={stageRef} className="hx-stage hh" style={d(3)}>
+        <div className="hx-card c1">
+          <div className="hx-wv">{[0, 120, 240, 60, 180].map((x) => <i key={x} style={{ animationDelay: x + 'ms' }} />)}</div>
+          <div><b className="ml">ഇന്ന് എത്ര വിറ്റു?</b><small>Voice note · 0:04</small></div>
+        </div>
+        <div className="hx-card c2">
+          <small>Today's sales</small>
+          <div className="hx-num">₹18,420 <em>▲ 12%</em></div>
+          <svg viewBox="0 0 120 36" width="132" height="40" aria-hidden="true"><path d="M2 29C18 27 22 14 38 16S60 31 76 19 98 4 118 6" fill="none" stroke="#3f7a5c" strokeWidth="2.6" strokeLinecap="round" pathLength="1" /></svg>
+        </div>
+        <div className="hx-card c3"><span className="hx-ok">✓</span><div><b>Booking confirmed</b><small>Tomorrow · 10:00</small></div></div>
+        <Demo />
+      </div>
+    </header>
+  );
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const curRef = useRef(0);
+  const [heroReady, setHeroReady] = useState(false);
   const activeLoopRef = useRef<gsap.core.Timeline | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const introRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const html = document.documentElement;
-    html.classList.add('lock');
-    const introEl = introRef.current || document.getElementById('intro');
-    const scenes = buildScenes();
 
-    function unlock() {
-      html.classList.remove('lock');
-      if (introEl) {
-        introEl.style.display = 'none';
-      }
-    }
-    const safetyNet = setTimeout(unlock, 7000);
-
-    /* ── 1. Phone Demo Tab Player ── */
-    const sceneEl = document.getElementById('scene');
-    const tabEls = document.querySelectorAll<HTMLButtonElement>('.tab');
-
-    function selectTab(n: number) {
-      tabEls.forEach((x, i) => x.setAttribute('aria-selected', String(i === n)));
-    }
-
-    function play(n: number) {
-      curRef.current = n;
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-      if (sceneEl) sceneEl.innerHTML = '';
-      selectTab(n);
-      const dur = 250 + scenes[n].length * 1000 + 2400;
-      scenes[n].forEach(([cls, htmlContent], i) => {
-        function add() {
-          const d = document.createElement('div');
-          d.className = (cls === 'bill' ? 'bill' : cls === 'code' ? 'code-card' : `msg ${cls}`) + ' pop';
-          d.innerHTML = htmlContent;
-          sceneEl?.appendChild(d);
-        }
-        if (reduce) add();
-        else timersRef.current.push(setTimeout(add, 250 + i * 1000));
-      });
-      if (!reduce) {
-        timersRef.current.push(setTimeout(() => play((n + 1) % scenes.length), dur));
-      }
-    }
-
-    tabEls.forEach(t => t.addEventListener('click', () => play(+(t.dataset.s ?? '0'))));
-    document.getElementById('replay')?.addEventListener('click', () => play(curRef.current));
-
-    /* ── 2. Second Section: Agent Workflow Canvas Builder ── */
+    /* ── 1. Agent Workflow Canvas Builder ── */
     function buildCanvas() {
       const host = document.getElementById('cvHost');
       if (!host) return;
@@ -161,7 +215,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
     buildCanvas();
     window.addEventListener('resize', buildCanvas);
 
-    /* ── 3. Mobile Dock Visibility ── */
+    /* ── 2. Mobile Dock Visibility ── */
     const dk = document.querySelector<HTMLElement>('.dock');
     function dockCheck() {
       dk?.classList.toggle('on', window.scrollY > window.innerHeight * 0.85);
@@ -169,29 +223,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
     window.addEventListener('scroll', dockCheck, { passive: true });
     dockCheck();
 
-    /* ── 4. Live Activity Ticker ── */
-    const items = [
-      'Booking a fitting for tomorrow, 10:00',
-      'Reading a supplier bill: 4,820',
-      'Replying to a price question on WhatsApp',
-      'Rice stock is low. Reorder drafted.',
-      'Lead alert sent to the owner',
-    ];
-    let li = 0;
-    const lv = document.querySelector<HTMLElement>('.lv');
-    let tickTimer: ReturnType<typeof setInterval> | undefined;
-    if (!reduce && lv) {
-      tickTimer = setInterval(() => {
-        lv.classList.add('out');
-        setTimeout(() => {
-          li = (li + 1) % items.length;
-          lv.textContent = items[li];
-          lv.classList.remove('out');
-        }, 260);
-      }, 2800);
-    }
-
-    /* ── 5. Dashboard Interactive Mode Switch ── */
+    /* ── 3. Dashboard Interactive Mode Switch ── */
     const sw = document.getElementById('sw');
     const dash = document.querySelector<HTMLElement>('.dash');
     sw?.addEventListener('click', () => {
@@ -200,274 +232,129 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       dash?.classList.toggle('manual', on);
     });
 
-    /* ── 6. GSAP Animations Pipeline ── */
+    /* ── 4. GSAP Scroll Animations ── */
     if (reduce) {
-      unlock();
-      play(0);
       const host = document.getElementById('cvHost');
       if (host) {
-        const nds = host.querySelectorAll<HTMLElement>('.nd');
-        nds.forEach(el => { el.style.opacity = '1'; el.style.visibility = 'visible'; });
+        host.querySelectorAll<HTMLElement>('.nd').forEach(el => { el.style.opacity = '1'; el.style.visibility = 'visible'; });
       }
       return () => {
-        clearTimeout(safetyNet);
-        timersRef.current.forEach(clearTimeout);
         window.removeEventListener('scroll', dockCheck);
         window.removeEventListener('resize', buildCanvas);
-        if (tickTimer !== undefined) clearInterval(tickTimer);
       };
     }
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      function buildScrollAnimations() {
-        gsap.utils.toArray('.t').forEach((el: any) => {
-          gsap.from(el, { y: 30, autoAlpha: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } });
+      const st = (t: string, o = 88) => ({ trigger: t, start: `top ${o}%`, once: true });
+      gsap.utils.toArray('.t').forEach((el: any) => {
+        gsap.from(el, { y: 30, autoAlpha: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } });
+      });
+      gsap.from('.stack span', { y: 14, autoAlpha: 0, duration: 0.5, stagger: 0.05, scrollTrigger: { trigger: '.stack', start: 'top 92%', once: true } });
+      gsap.from('.bc', { y: 44, autoAlpha: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out', scrollTrigger: st('.bento') });
+
+      /* Bill Reader Scan Animation Loop */
+      const scanLoop = gsap.timeline({ paused: true, repeat: -1, repeatDelay: 1.2 });
+      scanLoop
+        .set('.scan', { top: '0%', autoAlpha: 1 })
+        .to('.scan', { top: '98%', duration: 1.5, ease: 'power1.inOut' })
+        .to('.scan', { autoAlpha: 0, duration: 0.25 });
+
+      gsap.timeline({ scrollTrigger: { trigger: '.inv-grid', start: 'top 85%', once: true }, onComplete() { scanLoop.play(); } })
+        .from('.paper', { y: 30, rotate: -6, autoAlpha: 0, duration: 0.8, ease: 'power3.out' })
+        .fromTo('.scan', { top: '0%', autoAlpha: 1 }, { top: '98%', duration: 1.5, ease: 'power1.inOut' }, '-=.2')
+        .to('.scan', { autoAlpha: 0, duration: 0.25 })
+        .from('.jl', { autoAlpha: 0, x: -14, duration: 0.35, stagger: 0.09 }, '-=1.2');
+
+      ScrollTrigger.create({
+        trigger: '.inv-grid', start: 'top bottom', end: 'bottom top',
+        onToggle(self: any) { if (self.isActive) scanLoop.play(); else scanLoop.pause(); },
+      });
+
+      gsap.from('.dash', { y: 50, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: st('.dash') });
+      gsap.from('.feed .row', { x: -22, autoAlpha: 0, duration: 0.5, stagger: 0.12, scrollTrigger: st('.feed', 92) });
+      gsap.from('.ticks li', { x: -16, autoAlpha: 0, duration: 0.5, stagger: 0.1, scrollTrigger: st('.ticks', 92) });
+      gsap.from('.ob li', { y: 30, autoAlpha: 0, duration: 0.6, stagger: 0.12, scrollTrigger: st('.ob', 90) });
+      gsap.fromTo('.ob-bar b', { width: '0%' }, { width: '100%', duration: 1.6, ease: 'power2.out', scrollTrigger: st('.ob-bar', 92) });
+      gsap.from('.final', { y: 40, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.final', start: 'top 92%', once: true } });
+
+      /* Agent canvas workflow loop */
+      (function initCanvasAnimation() {
+        const host = document.getElementById('cvHost');
+        if (!host) return;
+        const nds = host.querySelectorAll<HTMLElement>('.nd');
+        const acts = host.querySelectorAll<SVGPathElement>('.act');
+        const dot = host.querySelector<SVGGElement>('.pk');
+        const n = nds.length;
+        const pt = { p: 0 };
+        const stepDuration = 2.0, moveDuration = 1.45;
+
+        nds.forEach(el => { el.style.opacity = '1'; el.style.visibility = 'visible'; });
+        if (activeLoopRef.current) activeLoopRef.current.kill();
+
+        const loop = gsap.timeline({ paused: false, repeat: -1, repeatDelay: 2.0 });
+        activeLoopRef.current = loop;
+
+        function hot(idx: number) { nds.forEach((x, j) => x.classList.toggle('hot', j === idx)); }
+        loop.call(hot, [0], 0).set(dot, { opacity: 1 }, 0);
+
+        acts.forEach((path, i) => {
+          const len = path.getTotalLength(), startT = i * stepDuration;
+          loop.call(() => { const p = path.getPointAtLength(0); dot?.setAttribute('transform', `translate(${p.x} ${p.y})`); }, [], startT);
+          loop.fromTo(pt, { p: 0 }, { p: 1, duration: moveDuration, ease: 'sine.inOut', onUpdate() { const q = path.getPointAtLength(pt.p * len); dot?.setAttribute('transform', `translate(${q.x} ${q.y})`); } }, startT + 0.15);
+          loop.call(hot, [i + 1], startT + 0.15 + moveDuration);
         });
-        gsap.from('.stack span', { y: 14, autoAlpha: 0, duration: 0.5, stagger: 0.05, scrollTrigger: { trigger: '.stack', start: 'top 92%', once: true } });
 
-        const st = (t: string, o = 88) => ({ trigger: t, start: `top ${o}%`, once: true });
-        gsap.from('.bc', { y: 44, autoAlpha: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out', scrollTrigger: st('.bento') });
+        const finalArrival = (acts.length - 1) * stepDuration + 0.15 + moveDuration;
+        loop.to(dot, { opacity: 0, duration: 0.5, ease: 'power2.out' }, finalArrival + 0.3).call(hot, [-1], finalArrival + 1.8);
 
-        /* Bill Reader Scan Animation Loop */
-        const scanLoop = gsap.timeline({ paused: true, repeat: -1, repeatDelay: 1.2 });
-        scanLoop
-          .set('.scan', { top: '0%', autoAlpha: 1 })
-          .to('.scan', { top: '98%', duration: 1.5, ease: 'power1.inOut' })
-          .to('.scan', { autoAlpha: 0, duration: 0.25 });
-
-        gsap.timeline({
-          scrollTrigger: {
-            trigger: '.inv-grid',
-            start: 'top 85%',
-            once: true,
-          },
-          onComplete() {
-            scanLoop.play();
-          },
-        })
-          .from('.paper', { y: 30, rotate: -6, autoAlpha: 0, duration: 0.8, ease: 'power3.out' })
-          .fromTo('.scan', { top: '0%', autoAlpha: 1 }, { top: '98%', duration: 1.5, ease: 'power1.inOut' }, '-=.2')
-          .to('.scan', { autoAlpha: 0, duration: 0.25 })
-          .from('.jl', { autoAlpha: 0, x: -14, duration: 0.35, stagger: 0.09 }, '-=1.2');
+        const en = gsap.timeline({ scrollTrigger: { trigger: host, start: 'top 88%', once: true } });
+        nds.forEach((el, i) => {
+          en.from(el, { y: 16, scale: 0.96, duration: 0.6, ease: 'power2.out' }, i * 0.1);
+          if (acts[i]) en.fromTo(acts[i], { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'sine.out' }, i * 0.1 + 0.1);
+        });
+        const retryNodes = host.querySelectorAll('.retry, .rt');
+        if (retryNodes.length > 0) en.from(retryNodes, { autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, n * 0.1);
 
         ScrollTrigger.create({
-          trigger: '.inv-grid',
-          start: 'top bottom',
-          end: 'bottom top',
-          onToggle(self: any) {
-            if (self.isActive) scanLoop.play();
-            else scanLoop.pause();
-          },
+          trigger: host, start: 'top bottom', end: 'bottom top',
+          onToggle(self: any) { if (self.isActive) loop.play(); else loop.pause(); },
         });
+      })();
 
-        gsap.from('.dash', { y: 50, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: st('.dash') });
-        gsap.from('.feed .row', { x: -22, autoAlpha: 0, duration: 0.5, stagger: 0.12, scrollTrigger: st('.feed', 92) });
-        gsap.from('.ticks li', { x: -16, autoAlpha: 0, duration: 0.5, stagger: 0.1, scrollTrigger: st('.ticks', 92) });
-        gsap.from('.ob li', { y: 30, autoAlpha: 0, duration: 0.6, stagger: 0.12, scrollTrigger: st('.ob', 90) });
-        gsap.fromTo('.ob-bar b', { width: '0%' }, { width: '100%', duration: 1.6, ease: 'power2.out', scrollTrigger: st('.ob-bar', 92) });
-        gsap.from('.final', { y: 40, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.final', start: 'top 92%', once: true } });
-
-        /* Agent canvas workflow loop */
-        (function initCanvasAnimation() {
-          const host = document.getElementById('cvHost');
-          if (!host) return;
-
-          const nds = host.querySelectorAll<HTMLElement>('.nd');
-          const acts = host.querySelectorAll<SVGPathElement>('.act');
-          const dot = host.querySelector<SVGGElement>('.pk');
-          const n = nds.length;
-          const pt = { p: 0 };
-          const stepDuration = 2.0;
-          const moveDuration = 1.45;
-          const ease = 'sine.inOut';
-
-          // Ensure all cards are visible immediately
-          nds.forEach(el => {
-            el.style.opacity = '1';
-            el.style.visibility = 'visible';
-          });
-
-          if (activeLoopRef.current) {
-            activeLoopRef.current.kill();
-          }
-
-          const loop = gsap.timeline({ paused: false, repeat: -1, repeatDelay: 2.0 });
-          activeLoopRef.current = loop;
-
-          function hot(idx: number) {
-            nds.forEach((x, j) => x.classList.toggle('hot', j === idx));
-          }
-
-          // Initial state: first card glows, dot is placed at start of first path
-          loop.call(hot, [0], 0)
-            .set(dot, { opacity: 1 }, 0);
-
-          acts.forEach((path, i) => {
-            const len = path.getTotalLength();
-            const startT = i * stepDuration;
-
-            // Set dot position to start of this path
-            loop.call(() => {
-              const startPt = path.getPointAtLength(0);
-              dot?.setAttribute('transform', `translate(${startPt.x} ${startPt.y})`);
-            }, [], startT);
-
-            // Move dot along path with ultra-smooth sinusoidal easing
-            loop.fromTo(pt, { p: 0 }, {
-              p: 1,
-              duration: moveDuration,
-              ease: ease,
-              onUpdate() {
-                const q = path.getPointAtLength(pt.p * len);
-                dot?.setAttribute('transform', `translate(${q.x} ${q.y})`);
-              },
-            }, startT + 0.15); // gentle 0.15s rest before leaving previous node
-
-            // When dot arrives at the next node (i + 1), activate the next card
-            loop.call(hot, [i + 1], startT + 0.15 + moveDuration);
-          });
-
-          // Final step: keep last card ("Reply sent") highlighted comfortably, then fade dot and deactivate
-          const finalArrival = (acts.length - 1) * stepDuration + 0.15 + moveDuration;
-          loop.to(dot, { opacity: 0, duration: 0.5, ease: 'power2.out' }, finalArrival + 0.3)
-            .call(hot, [-1], finalArrival + 1.8);
-
-          const en = gsap.timeline({
-            scrollTrigger: { trigger: host, start: 'top 88%', once: true }
-          });
-
-          nds.forEach((el, i) => {
-            en.from(el, { y: 16, scale: 0.96, duration: 0.6, ease: 'power2.out' }, i * 0.1);
-            if (acts[i]) {
-              en.fromTo(acts[i], { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'sine.out' }, i * 0.1 + 0.1);
-            }
-          });
-
-          const retryNodes = host.querySelectorAll('.retry, .rt');
-          if (retryNodes.length > 0) {
-            en.from(retryNodes, { autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, n * 0.1);
-          }
-
-          ScrollTrigger.create({
-            trigger: host,
-            start: 'top bottom',
-            end: 'bottom top',
-            onToggle(self: any) {
-              if (self.isActive) loop.play();
-              else loop.pause();
-            },
-          });
-        })();
-      }
-
-      /* ── 7. Intro Splash Animation ── */
-      const pct = { v: 0 };
-      const pe = document.querySelector<HTMLElement>('.pct');
-      const bar = document.querySelector<HTMLElement>('.bar b');
-      gsap.set('.hh', { autoAlpha: 0, y: 26 });
-
-      function heroIn() {
-        gsap.to('.hh', { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.1, ease: 'power3.out' });
-        setTimeout(() => play(0), 700);
-      }
-
-      gsap.timeline({
-        onComplete() {
-          unlock();
-          buildScrollAnimations();
-          ScrollTrigger.refresh();
-        },
-      })
-        .from('.mark', { scale: 0, rotate: -90, duration: 0.7, ease: 'back.out(1.6)' })
-        .from('.word span', { yPercent: 110, duration: 0.6, stagger: 0.07, ease: 'power3.out' }, '-=.3')
-        .from('.sub2', { autoAlpha: 0, y: 10, duration: 0.5 }, '-=.2')
-        .to(pct, {
-          v: 100,
-          duration: 0.9,
-          ease: 'power1.inOut',
-          onUpdate() {
-            if (pe) pe.textContent = String(Math.round(pct.v));
-            if (bar) bar.style.width = `${pct.v}%`;
-          },
-        }, 0.2)
-        .to('.intro-in', { autoAlpha: 0, y: -20, duration: 0.4 }, '+=.05')
-        .to(introEl, { yPercent: -100, duration: 0.9, ease: 'power4.inOut' }, '-=.1')
-        .add(heroIn, '-=.55');
+      ScrollTrigger.refresh();
     }, containerRef);
 
     window.addEventListener('load', () => ScrollTrigger.refresh());
 
     return () => {
       ctx.revert();
-      html.classList.remove('lock');
-      clearTimeout(safetyNet);
-      timersRef.current.forEach(clearTimeout);
       window.removeEventListener('scroll', dockCheck);
       window.removeEventListener('resize', buildCanvas);
       if (activeLoopRef.current) activeLoopRef.current.kill();
-      if (tickTimer !== undefined) clearInterval(tickTimer);
     };
-  }, []);
+  }, [heroReady]);
 
   return (
-    <div className="landing-root" ref={containerRef}>
-      {/* Background Aura */}
-      <div className="aura" aria-hidden="true"><i /><i /><i /></div>
-
-      {/* Intro Splash Screen */}
-      <div className="intro" id="intro" ref={introRef} aria-hidden="true">
-        <div className="intro-in">
-          <div className="mark" />
-          <div className="word"><span>K</span><span>a</span><span>d</span><span>a</span></div>
-          <div className="sub2 ml">കട</div>
-          <div className="bar"><b /></div>
-          <div className="pct">0</div>
-        </div>
-      </div>
+    <div className="landing-root kada-page" ref={containerRef}>
+      {/* Intro Splash */}
+      <KadaIntro navSelector=".logo" onHero={() => setHeroReady(true)} />
 
       <div className="wrap">
         {/* Navigation */}
-        <nav>
+        <nav className="kada-nav">
           <a className="logo" href="#top"><i />Kada</a>
           <div className="links">
             <a href="#how">How it works</a>
             <a href="#features">Features</a>
-            <a href="#dashboard">Dashboard</a>
+            <a href="/dashboard" onClick={(e) => { e.preventDefault(); onLaunchApp(); }}>Dashboard</a>
           </div>
-          <button className="btn ghost" data-testid="cta-nav" onClick={onLaunchApp}>Get early access</button>
+          <button className="kb kb-ghost" data-testid="cta-nav" onClick={onLaunchApp}>Get early access</button>
         </nav>
 
         {/* Hero Section */}
-        <header className="hero" id="top">
-          <div>
-            <p className="mlhook ml hh">പറഞ്ഞാൽ മതി.</p>
-            <h1 className="hh">Speak. <span>Kada does the rest.</span></h1>
-            <p className="lead hh">Send a voice note in Malayalam. Your shop books customers, reads bills and answers WhatsApp, day and night.</p>
-            <div className="live hh" aria-live="polite"><i></i><span className="lv">Booking a fitting for tomorrow, 10:00</span></div>
-            <div className="cta-row hh">
-              <button className="btn" data-testid="cta-hero" onClick={onLaunchApp}>Start free setup</button>
-              <a className="btn ghost" href="#how">Watch how it works</a>
-            </div>
-            <div className="trust hh"><span>WhatsApp</span><span>Malayalam + English</span><span>GST bills</span><span>24/7</span></div>
-          </div>
-
-          <div className="hstage hh">
-            <div className="fl f1"><b>&#10003;</b>Booking confirmed</div>
-            <div className="fl f2"><b>&#8377;</b>Bill read: 4,820</div>
-            <div className="fl f3"><b>!</b>New lead alert</div>
-            <div className="phone"><div className="screen">
-              <div className="tabs" role="tablist" aria-label="Try a demo">
-                <button className="tab" role="tab" aria-selected="true" data-s="0">Voice note</button>
-                <button className="tab" role="tab" aria-selected="false" data-s="1">Bill</button>
-                <button className="tab" role="tab" aria-selected="false" data-s="2">WhatsApp</button>
-              </div>
-              <div id="scene" aria-live="polite" />
-              <button className="replay" id="replay">Replay</button>
-            </div></div>
-          </div>
-        </header>
+        <HeroSection ready={heroReady} onLaunchApp={onLaunchApp} />
 
         {/* Section 2: How It Works (Agent Canvas) */}
         <section id="how" className="agent-sec">
@@ -488,44 +375,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           <p className="sub">From the first voice note to the final reply, Kada covers the daily work that eats a shop owner's time.</p>
           <div className="bento">
             <div className="bc w3 soft">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" /></svg></span>
               <h3>Voice and text in Malayalam</h3>
               <p>Send a voice note or type, in Malayalam or English. Speech becomes text, and text becomes a structured action your shop can use.</p>
               <div className="chips"><span>Malayalam</span><span>English</span><span>Voice notes</span></div>
             </div>
             <div className="bc w3">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6" /></svg></span>
               <h3>Autonomous task agent</h3>
               <p>Runs multi-step jobs on its own and reports back when they are done.</p>
               <div className="chips"><span>Inventory checks</span><span>Appointment confirmations</span><span>Price validation</span></div>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-2M4 4v4h4M4 16a8 8 0 0 0 14 2M20 20v-4h-4"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-2M4 4v4h4M4 16a8 8 0 0 0 14 2M20 20v-4h-4" /></svg></span>
               <h3>Self-correcting loop</h3>
               <p>Every result is drafted, run, reviewed and refined before it reaches a customer.</p>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" /></svg></span>
               <h3>Bill and invoice reader</h3>
               <p>Vision AI turns messy receipts and tax documents into clean, standard data.</p>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" /></svg></span>
               <h3>WhatsApp inbox</h3>
               <p>All customer messages in one place, with instant replies to routine questions.</p>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" /></svg></span>
               <h3>High-value lead alerts</h3>
               <p>You are pinged the moment a big enquiry arrives, even if Kada is handling the rest.</p>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></svg></span>
               <h3>Live dashboard and logs</h3>
               <p>See what the agent did in plain words, with clear success badges and no raw data.</p>
             </div>
             <div className="bc">
-              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/><circle cx="16" cy="12" r="2"/></svg></span>
+              <span className="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4" /><circle cx="16" cy="12" r="2" /></svg></span>
               <h3>Manual override</h3>
               <p>Pause the agent or take over any chat with one tap.</p>
             </div>
@@ -578,6 +465,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 <li>Pause or take over with one tap</li>
                 <li>Thumb-friendly controls at the bottom of the screen</li>
               </ul>
+              <div style={{ marginTop: '1.4rem' }}>
+                <button className="btn" onClick={onLaunchApp} style={{ minHeight: '44px', padding: '0.65rem 1.4rem', fontSize: '0.92rem' }}>
+                  Open live dashboard &rarr;
+                </button>
+              </div>
             </div>
             <div className="dash" aria-label="Sample dashboard">
               <div className="dh">
@@ -633,7 +525,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         <section className="final" id="start">
           <h2 className="t">Set up your shop in 2 minutes.</h2>
           <p className="sub">Add your business name, opening hours and first product. Then send your first voice note.</p>
-          <button className="btn" data-testid="cta-final" onClick={onLaunchApp}>Start free setup</button>
+          <button className="kb kb-dark" data-testid="cta-final" onClick={onLaunchApp}>Start free setup</button>
         </section>
 
         <footer>Kada. Made for the small businesses of Kerala.</footer>
@@ -641,117 +533,113 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
 
       {/* Floating Sticky Dock (Mobile) */}
       <div className="dock">
-        <button className="btn" data-testid="cta-dock" onClick={onLaunchApp}>Start free setup</button>
+        <button className="kb kb-dark" data-testid="cta-dock" onClick={onLaunchApp}>Start free setup</button>
       </div>
 
-      {/* ── Exact CSS from landing.html ── */}
+      {/* ── CSS ── */}
       <style>{`
+        *,*::before,*::after { box-sizing: border-box; }
         :root {
           color-scheme: light;
-          --bg: #f8fbf8; --surface: #ffffff; --tint: #f0f6f1; --line: #dde7df; --ink: #1b2a23; --muted: #5f7167;
-          --accent: #3f7a5c; --accent-d: #2c5a43; --soft: #e3efe7; --on: #fff;
+          --bg: #f8fbf8; --surface: #fff; --tint: #f0f6f1; --line: #dde7df; --ink: #1b2a23; --muted: #5f7167;
+          --accent: #3f7a5c; --accent-d: #2c5a43; --soft: #e3efe7;
           --shadow: 0 1px 2px rgba(27,42,35,.04),0 14px 36px rgba(27,42,35,.07);
           --gap: clamp(3.5rem,9vw,6.5rem);
         }
-        body, html {
-          background: var(--bg) !important;
-          color: var(--ink) !important;
-        }
-        .landing-root {
-          background: var(--bg);
-          color: var(--ink);
-          font: 400 1.05rem/1.65 'Hanken Grotesk',system-ui,sans-serif;
-          min-height: 100vh;
-          overflow-x: hidden;
-          position: relative;
-        }
-        html.lock, html.lock body { overflow: hidden; height: 100%; }
-        h1, h2, h3 { font-family: 'Newsreader','Noto Sans Malayalam',Georgia,serif; font-weight: 500; line-height: 1.1; margin: 0; letter-spacing: -.015em; }
+        body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.05rem/1.65 'Hanken Grotesk',system-ui,sans-serif; overflow-x: hidden; }
+        html.kada-lock, html.kada-lock body { overflow: hidden; height: 100%; }
+        h1, h2, h3 { margin: 0; letter-spacing: -.015em; }
+        h2, h3 { font-family: 'Newsreader','Noto Sans Malayalam',Georgia,serif; font-weight: 500; line-height: 1.1; }
         .ml { font-family: 'Noto Sans Malayalam',sans-serif; }
         a { color: inherit; }
+        .landing-root { min-height: 100vh; background: radial-gradient(60vmax 60vmax at 5% 0,#d4eedf,transparent 60%),radial-gradient(55vmax 55vmax at 100% 20%,#d9eef0,transparent 60%),var(--bg); }
         .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; }
 
-        /* Aura */
-        .aura { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg,#f8fbf8,#f1f7f2); }
-        .aura i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .7; will-change: transform; animation: drift 24s ease-in-out infinite alternate; }
-        .aura i:nth-child(1) { width: 70vmin; height: 70vmin; left: -20vmin; top: -18vmin; background: #c4e8d3; }
-        .aura i:nth-child(2) { width: 60vmin; height: 60vmin; right: -18vmin; top: 12vmin; background: #d3ebef; animation-delay: -8s; }
-        .aura i:nth-child(3) { width: 60vmin; height: 60vmin; left: 10vw; bottom: -20vmin; background: #f1ebc9; opacity: .55; animation-delay: -14s; }
-        @keyframes drift { to { transform: translate3d(8vmin,6vmin,0) scale(1.1); } }
+        /* ── KadaIntro ── */
+        .ki { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; }
+        .ki-bg { position: absolute; inset: 0; background: linear-gradient(160deg,#e7f5ec,#f8fbf8 55%,#eaf5f3); }
+        .ki-lw { position: relative; max-width: 92vw; }
+        .ki-lock { position: relative; display: flex; align-items: center; transform-origin: 0 0; font: 500 clamp(2.8rem,11vw,4rem)/1.65 'Newsreader',Georgia,serif; will-change: transform; }
+        .ki-mk { display: block; flex: none; width: .6875em; height: .6875em; border-radius: 50% 50% 50% 12%; background: var(--accent); transform: scale(0); }
+        .ki-wd { display: block; overflow: hidden; white-space: nowrap; max-width: 0; opacity: 0; }
+        .ki-tag { position: absolute; left: 0; right: 0; top: 100%; margin-top: -.3rem; text-align: center; font: 400 clamp(1.05rem,3.4vw,1.3rem)/1.4 'Noto Sans Malayalam',sans-serif; letter-spacing: .04em; color: var(--muted); opacity: 0; }
+        @media(max-width:380px) { .ki-lock { font-size: 2.6rem; } .ki-tag { font-size: 1rem; } }
 
-        /* Intro Splash */
-        .intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: linear-gradient(160deg,#e7f5ec,#f8fbf8 55%,#eaf5f3); will-change: transform; animation: safe .01s 6s forwards; }
-        @keyframes safe { to { visibility: hidden; } }
-        .intro-in { text-align: center; }
-        .mark { width: 4rem; height: 4rem; margin: 0 auto 1rem; border-radius: 50% 50% 50% 12%; background: var(--accent); box-shadow: 0 0 0 14px rgba(63,122,92,.1), 0 0 0 32px rgba(63,122,92,.05); }
-        .word { display: flex; justify-content: center; overflow: hidden; font: 500 3.6rem/1.15 'Newsreader',serif; letter-spacing: -.02em; color: var(--ink); }
-        .word span { display: inline-block; }
-        .intro .sub2 { color: var(--muted); font-size: 1.1rem; margin-top: .2rem; }
-        .bar { width: 11rem; height: 3px; margin: 1.6rem auto .6rem; background: rgba(63,122,92,.15); border-radius: 3px; overflow: hidden; }
-        .bar b { display: block; height: 100%; width: 0; background: var(--accent); }
-        .pct { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-        /* Nav */
-        nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 0; position: relative; z-index: 1; }
+        /* ── Nav ── */
+        .kada-nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 0; position: relative; z-index: 1; }
         .logo { font: 500 1.6rem 'Newsreader',serif; text-decoration: none; display: flex; gap: .55rem; align-items: center; color: var(--ink); }
         .logo i { width: 1.1rem; height: 1.1rem; border-radius: 50% 50% 50% 12%; background: var(--accent); }
         .links { display: none; gap: 1.8rem; font-size: .95rem; color: var(--muted); }
         .links a { text-decoration: none; }
         .links a:hover { color: var(--ink); }
-        .btn { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--accent); border-radius: 999px; padding: .8rem 1.6rem; font: 500 1rem 'Hanken Grotesk',sans-serif; background: var(--accent); color: var(--on); text-decoration: none; cursor: pointer; min-height: 48px; box-shadow: 0 8px 22px rgba(63,122,92,.25); transition: background .25s, box-shadow .25s; }
-        .btn:hover { background: var(--accent-d); box-shadow: 0 10px 26px rgba(63,122,92,.32); }
-        .btn.ghost { background: rgba(255,255,255,.7); color: var(--ink); border-color: var(--line); box-shadow: none; }
-        .btn:focus-visible, a:focus-visible, .tab:focus-visible, .replay:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .kada-nav > :not(.logo) { transition: opacity .7s ease .1s; }
+        html.kada-lock .kada-nav > :not(.logo) { opacity: 0; }
 
-        /* Hero */
-        .eyebrow { font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 0 0 .9rem; }
-        .hero { display: grid; gap: 3rem; padding: 2rem 0 var(--gap); align-items: center; position: relative; z-index: 1; }
-        .hero > * { min-width: 0; }
-        .mlhook { font-size: clamp(1.5rem,4.5vw,2rem); color: var(--accent); margin: 0 0 .5rem; font-weight: 500; }
-        .hero h1 { font-size: clamp(3rem,10.5vw,5.4rem); line-height: 1.02; }
-        .hero h1 span { color: var(--accent); }
-        .lead { color: var(--muted); font-size: 1.15rem; max-width: 32rem; margin: 1.3rem 0 2rem; }
-        .live { display: flex; align-items: center; gap: .65rem; width: fit-content; max-width: 100%; margin: 0 0 1.6rem; padding: .55rem 1.1rem; border-radius: 999px; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .92rem; font-weight: 500; }
-        .live i { flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--accent); animation: pulse 1.6s infinite; }
-        .lv { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .25s, transform .25s; }
-        .lv.out { opacity: 0; transform: translateY(6px); }
-        .cta-row { display: flex; flex-wrap: wrap; gap: .8rem; }
-        .trust { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.6rem; }
-        .trust span { padding: .3rem .8rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.7); color: var(--muted); font-size: .85rem; }
+        /* ── Buttons ── */
+        .kb { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 48px; padding: .8rem 1.6rem; border-radius: 999px; border: 1px solid var(--accent); font: 500 1rem 'Hanken Grotesk',sans-serif; text-decoration: none; cursor: pointer; transition: background .25s; }
+        .kb-dark { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 14px 30px -10px rgba(27,42,35,.55); }
+        .kb-dark:hover { background: var(--accent-d); border-color: var(--accent-d); }
+        .kb-ghost { background: rgba(255,255,255,.7); color: var(--ink); border-color: var(--line); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+        .kb:focus-visible, .hx-tab:focus-visible, .hx-replay:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-        /* Phone Demo */
-        .hstage { position: relative; width: min(340px,100%); margin: 0 auto; }
-        .hstage .phone { width: 100%; }
-        .fl { position: absolute; z-index: 2; display: flex; gap: .5rem; align-items: center; padding: .5rem .85rem; border-radius: 1rem; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .82rem; font-weight: 500; white-space: nowrap; animation: bob 5s ease-in-out infinite; }
-        .fl b { width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--soft); color: var(--accent-d); display: grid; place-items: center; font-size: .72rem; }
-        .f1 { left: -.6rem; top: 14%; }
-        .f2 { right: -.6rem; top: 46%; animation-delay: -1.6s; }
-        .f3 { left: -.6rem; bottom: 10%; animation-delay: -3.2s; }
-        @keyframes bob { 50% { transform: translateY(-8px); } }
-        @keyframes pulse { 50% { transform: scale(1.7); opacity: .35; } }
-
-        .phone { width: min(330px,100%); margin: 0 auto; border-radius: 2.2rem; padding: .55rem; background: rgba(255,255,255,.85); border: 1px solid var(--line); box-shadow: 0 30px 70px rgba(63,122,92,.18); }
-        .screen { border-radius: 1.7rem; background: var(--tint); height: 480px; min-height: 0; overflow: hidden; padding: .9rem; display: flex; flex-direction: column; gap: .6rem; }
-        .tabs { display: flex; gap: .2rem; background: var(--surface); padding: .25rem; border-radius: 999px; border: 1px solid var(--line); }
-        .tab { flex: 1; border: 0; background: none; padding: .45rem .2rem; border-radius: 999px; font: 500 .82rem 'Hanken Grotesk',sans-serif; color: var(--muted); cursor: pointer; min-height: 40px; transition: background .25s, color .25s; }
-        .tab[aria-selected="true"] { background: var(--soft); color: var(--accent-d); }
-        #scene { display: flex; flex-direction: column; gap: .55rem; flex: 1; overflow: hidden; }
-        .pop { animation: fade .5s both; }
-        @keyframes fade { from { opacity: 0; transform: translateY(6px); } }
-        .msg { max-width: 88%; padding: .6rem .85rem; border-radius: 1rem; font-size: .93rem; line-height: 1.5; }
-        .msg.in { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: .3rem; }
-        .msg.out { align-self: flex-end; background: var(--accent); color: var(--on); border-bottom-right-radius: .3rem; }
-        .code-card { align-self: stretch; background: var(--soft); color: var(--accent-d); font: .78rem ui-monospace,monospace; white-space: pre; border-radius: .8rem; padding: .6rem .8rem; overflow: hidden; }
-        .voice { display: flex; align-items: center; gap: .6rem; }
-        .wave { display: flex; gap: 3px; align-items: center; height: 22px; }
-        .wave s { width: 3px; border-radius: 2px; background: var(--accent); height: 35%; }
-        .wave s:nth-child(3n) { height: 90%; }
-        .wave s:nth-child(3n+1) { height: 60%; }
-        .wave s:nth-child(5n) { height: 100%; }
-        .bill { border: 1px solid var(--line); background: var(--surface); border-radius: .8rem; padding: .7rem .8rem; font-size: .85rem; }
-        .bill div { display: flex; justify-content: space-between; padding: .12rem 0; }
-        .bill .tot { border-top: 1px solid var(--line); margin-top: .35rem; padding-top: .4rem; font-weight: 600; }
-        .replay { margin-top: auto; align-self: center; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .45rem 1rem; font: 500 .85rem 'Hanken Grotesk',sans-serif; cursor: pointer; min-height: 40px; }
+        /* ── Hero ── */
+        .hero { position: relative; display: grid; gap: 3.5rem; align-items: center; padding: 1.2rem 0 var(--gap); }
+        .hero::before { content: ""; position: absolute; z-index: -1; inset: -3rem -50vw 0; background-image: radial-gradient(rgba(63,122,92,.2) 1px,transparent 1.3px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(55% 60% at 68% 42%,#000,transparent 75%); mask-image: radial-gradient(55% 60% at 68% 42%,#000,transparent 75%); }
+        .hh { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.22,1,.36,1) calc(var(--i,0)*100ms), transform .9s cubic-bezier(.22,1,.36,1) calc(var(--i,0)*100ms); }
+        .hero.in .hh { opacity: 1; transform: none; }
+        .hx-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+        .hx-live { display: flex; align-items: center; gap: .65rem; width: fit-content; max-width: 100%; padding: .55rem 1.1rem; border-radius: 999px; background: rgba(255,255,255,.72); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .92rem; font-weight: 500; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+        .hx-live i { flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--accent); animation: hx-pulse 1.6s infinite; }
+        @keyframes hx-pulse { 50% { transform: scale(1.7); opacity: .35; } }
+        .hero h1 { margin: 1.3rem 0 0; font: 600 clamp(2.8rem,8.4vw,5.7rem)/.97 'Hanken Grotesk',system-ui,sans-serif; letter-spacing: -.052em; }
+        .hero h1 span { display: inline-block; padding-bottom: .1em; background: linear-gradient(95deg,#2c5a43,#3f7a5c 35%,#23a08f 70%,#5fb98d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hx-ml { display: flex; align-items: center; gap: .75rem; margin: 1.2rem 0 0; font: 500 1.15rem 'Noto Sans Malayalam',sans-serif; color: var(--accent-d); }
+        .hx-ml::before { content: ""; width: 2.2rem; height: 1px; background: var(--accent); }
+        .hx-lead { margin: 1rem 0 1.8rem; max-width: 30rem; font-size: 1.1rem; color: var(--muted); }
+        .hx-cta { display: flex; flex-wrap: wrap; gap: .8rem; }
+        .hx-trust { display: flex; flex-wrap: wrap; gap: .4rem 1.3rem; list-style: none; margin: 2rem 0 0; padding: 0; font-size: .86rem; color: var(--muted); }
+        .hx-trust li::before { content: ""; display: inline-block; width: .42rem; height: .42rem; margin-right: .5rem; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+        .hx-stage { isolation: isolate; position: relative; width: min(340px,100%); margin: 0 auto; }
+        .hx-stage::before { content: ""; position: absolute; z-index: -1; inset: -16% -34%; filter: blur(34px); background: radial-gradient(closest-side at 28% 36%,rgba(103,201,150,.6),transparent),radial-gradient(closest-side at 74% 58%,rgba(120,205,215,.55),transparent),radial-gradient(closest-side at 48% 92%,rgba(245,226,150,.5),transparent); animation: hx-drift 14s ease-in-out infinite alternate; }
+        @keyframes hx-drift { to { transform: translate3d(4%,3%,0) scale(1.1); } }
+        .hx-phone { width: 100%; border-radius: 2.2rem; padding: .55rem; background: linear-gradient(160deg,#fff,#e8f2eb); border: 1px solid rgba(255,255,255,.95); box-shadow: 0 60px 90px -34px rgba(44,90,67,.5),0 0 0 7px rgba(255,255,255,.4); transform: perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition: transform .35s ease-out; }
+        .hx-screen { border-radius: 1.7rem; background: var(--tint); height: 480px; overflow: hidden; padding: .9rem; display: flex; flex-direction: column; gap: .6rem; }
+        .hx-tabs { display: flex; gap: .2rem; background: var(--surface); padding: .25rem; border-radius: 999px; border: 1px solid var(--line); }
+        .hx-tab { flex: 1; border: 0; background: none; min-height: 40px; padding: .45rem .2rem; border-radius: 999px; font: 500 .82rem 'Hanken Grotesk',sans-serif; color: var(--muted); cursor: pointer; transition: background .25s,color .25s; }
+        .hx-tab[aria-selected="true"] { background: var(--soft); color: var(--accent-d); }
+        .hx-scene { display: flex; flex-direction: column; gap: .55rem; flex: 1; overflow: hidden; }
+        .dm { max-width: 88%; padding: .6rem .85rem; border-radius: 1rem; font-size: .93rem; line-height: 1.5; }
+        .dm.in { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: .3rem; }
+        .dm.out { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: .3rem; }
+        .dm.ml { font-family: 'Noto Sans Malayalam',sans-serif; }
+        .dm-pop { animation: dm-fade .5s both; }
+        @keyframes dm-fade { from { opacity: 0; transform: translateY(6px); } }
+        .dm-code { align-self: stretch; background: var(--soft); color: var(--accent-d); font: .78rem ui-monospace,monospace; white-space: pre-wrap; border-radius: .8rem; padding: .6rem .8rem; }
+        .dm-bill { background: var(--surface); border: 1px solid var(--line); border-radius: .8rem; padding: .6rem .85rem; font-size: .9rem; }
+        .dm-bill div { display: flex; justify-content: space-between; padding: .1rem 0; }
+        .dm-bill .tot { border-top: 1px dashed var(--line); margin-top: .3rem; padding-top: .4rem; font-weight: 600; }
+        .dm-voice { display: flex; align-items: center; gap: .6rem; }
+        .dm-wave { display: flex; gap: 3px; align-items: center; height: 22px; }
+        .dm-wave s { width: 3px; border-radius: 2px; background: var(--accent); height: 35%; }
+        .dm-wave s:nth-child(3n) { height: 90%; } .dm-wave s:nth-child(3n+1) { height: 60%; } .dm-wave s:nth-child(5n) { height: 100%; }
+        .hx-replay { margin-top: auto; align-self: center; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .45rem 1rem; font: 500 .85rem 'Hanken Grotesk',sans-serif; cursor: pointer; min-height: 40px; }
+        .hx-card { position: absolute; z-index: 3; display: none; gap: .3rem; padding: .8rem .95rem; border-radius: 1.15rem; font-size: .8rem; line-height: 1.3; background: rgba(255,255,255,.64); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 22px 44px -16px rgba(27,42,35,.3); animation: hx-bob 6s ease-in-out infinite; }
+        @keyframes hx-bob { 50% { transform: translateY(-8px); } }
+        .hx-card small { display: block; color: var(--muted); font-size: .74rem; }
+        .c1 { left: -5.6rem; top: 9%; grid-auto-flow: column; align-items: center; gap: .7rem; translate: calc(var(--px,0)*-40px) calc(var(--py,0)*-24px); }
+        .c2 { right: -5.2rem; top: 36%; animation-delay: -2s; translate: calc(var(--px,0)*56px) calc(var(--py,0)*-18px); }
+        .c3 { left: -4.6rem; bottom: 13%; grid-auto-flow: column; align-items: center; gap: .7rem; animation-delay: -4s; translate: calc(var(--px,0)*-52px) calc(var(--py,0)*30px); }
+        .hx-num { font: 600 1.55rem/1.1 'Hanken Grotesk',sans-serif; letter-spacing: -.03em; }
+        .hx-num em { font: 600 .72rem 'Hanken Grotesk',sans-serif; font-style: normal; color: var(--accent-d); background: var(--soft); border-radius: 999px; padding: .15rem .5rem; vertical-align: middle; margin-left: .3rem; letter-spacing: 0; }
+        .hx-card svg path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hx-draw 2s 1.2s ease forwards; }
+        @keyframes hx-draw { to { stroke-dashoffset: 0; } }
+        .hx-wv { display: flex; align-items: center; gap: 3px; height: 26px; }
+        .hx-wv i { width: 3px; height: 100%; border-radius: 2px; background: var(--accent); animation: hx-wv 1s ease-in-out infinite; }
+        @keyframes hx-wv { 50% { transform: scaleY(.3); } }
+        .hx-ok { width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: .8rem; flex: none; }
+        @media(min-width:700px) { .hx-card { display: grid; } }
+        @media(min-width:960px) { .hero { grid-template-columns: 1.08fr .92fr; } .hx-stage { width: 350px; } .hx-phone { --ry: -9deg; --rx: 3deg; } }
+        @media(max-width:699px) { .hero { gap: 2.6rem; } .hero h1 { font-size: clamp(2.8rem,13.5vw,3.6rem); } .hx-screen { height: 440px; } }
 
         /* Sections Common */
         section { padding: var(--gap) 0; border-top: 1px solid rgba(63,122,92,.14); position: relative; z-index: 1; }
@@ -764,7 +652,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         .wbar i { width: .6rem; height: .6rem; border-radius: 50%; background: #dfe7e1; }
         .wbar span:first-of-type { margin-left: .5rem; }
         .run { margin-left: auto; display: flex; align-items: center; gap: .4rem; color: var(--accent-d); font-weight: 500; }
-        .run b { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); animation: pulse 1.6s infinite; }
+        .run b { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); animation: hx-pulse 1.6s infinite; }
         
         /* Explicit styling for both .cv and #cvHost to guarantee layout integrity */
         .cv, #cvHost {
@@ -896,7 +784,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         .swt[aria-checked="true"] .k { transform: translateX(1.4rem); }
         .swt:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
         .mode { margin: .9rem 0; padding: .6rem .9rem; border-radius: .8rem; background: var(--soft); color: var(--accent-d); font-size: .88rem; font-weight: 500; }
-        .mode i { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); margin-right: .5rem; animation: pulse 1.6s infinite; }
+        .mode i { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); margin-right: .5rem; animation: hx-pulse 1.6s infinite; }
         .m-man { display: none; }
         .dash.manual .m-auto { display: none; }
         .dash.manual .m-man { display: inline; }
@@ -936,15 +824,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         /* Sticky Dock (Mobile) */
         .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px)); display: flex; justify-content: center; background: linear-gradient(transparent,var(--bg) 45%); pointer-events: none; transition: opacity .3s, transform .3s; opacity: 0; transform: translateY(100%); }
         .dock.on { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .dock .btn { pointer-events: auto; }
+        .dock .kb { pointer-events: auto; }
 
         /* Responsive Breakpoints */
         @media (min-width: 860px) {
           .links { display: flex; }
-          .hero { grid-template-columns: 1.1fr .9fr; }
-          .f1 { left: -2.8rem; }
-          .f2 { right: -2.8rem; }
-          .f3 { left: -2.4rem; }
           .bento { grid-template-columns: repeat(6, 1fr); }
           .bc { grid-column: span 2; }
           .bc.w3 { grid-column: span 3; }
@@ -959,18 +843,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
 
         @media (max-width: 859px) {
           :root { --gap: 2.75rem; }
-          nav { padding: .7rem 0; }
+          .kada-nav { padding: .7rem 0; }
           .logo { font-size: 1.4rem; }
-          nav .btn { padding: .55rem 1.1rem; min-height: 40px; font-size: .9rem; }
-          .hero { gap: 1.6rem; padding: .6rem 0 2.5rem; }
-          .mlhook { font-size: 1.3rem; margin-bottom: .1rem; }
-          .hero h1 { font-size: 2.7rem; }
-          .lead { font-size: 1rem; margin: .8rem 0 1rem; }
-          .live { margin-bottom: 1rem; font-size: .85rem; padding: .45rem .9rem; border: 0; background: none; box-shadow: none; }
-          .cta-row { flex-wrap: nowrap; gap: .5rem; }
-          .cta-row .btn { flex: 1; padding: .7rem .6rem; font-size: .92rem; white-space: nowrap; }
-          .trust, .fl, .chips { display: none; }
-          .hstage .phone .screen { min-height: 380px; }
+          .kada-nav .kb { padding: .55rem 1.1rem; min-height: 40px; font-size: .9rem; }
           .t { font-size: 1.8rem; }
           .sub { font-size: .98rem; margin-top: .7rem; }
           .bento { margin-top: 1.6rem; gap: .8rem; }
@@ -985,7 +860,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         }
 
         @media (prefers-reduced-motion: reduce) {
-          * { animation: none !important; transition: none !important; }
+          .hx-stage::before, .hx-card, .hx-wv i { animation: none; }
+          .hx-card svg path { animation: none; stroke-dashoffset: 0; }
+          .hh { transition: none; }
         }
       `}</style>
     </div>

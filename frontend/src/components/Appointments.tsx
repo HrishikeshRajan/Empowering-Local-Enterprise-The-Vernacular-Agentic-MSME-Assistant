@@ -34,13 +34,13 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
       {/* Top Banner */}
       <div className="glass-panel" style={{ 
         padding: '24px', 
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-        border: '1px solid var(--border-subtle)'
+        background: 'linear-gradient(135deg, #eaf4ed 0%, var(--surface) 100%)',
+        border: '1px solid var(--line)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="glass-badge glass-badge-indigo">
+              <span className="glass-badge glass-badge-emerald">
                 <Calendar size={14} />
                 Calendar Sync & Slot Booking
               </span>
@@ -48,12 +48,12 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
                 {appointments.length} Scheduled
               </span>
             </div>
-            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+            <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ink)' }}>
               {language === 'ml' 
                 ? 'അപ്പോയിന്റ്മെന്റുകൾ & കസ്റ്റമർ ബുക്കിംഗ്' 
                 : 'Appointments & Service Schedule'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '780px', marginTop: '4px' }}>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem', maxWidth: '780px', marginTop: '4px' }}>
               {language === 'ml'
                 ? 'ഉപഭോക്താക്കൾ WhatsApp വഴിയോ ശബ്ദ നിർദ്ദേശത്തിലൂടെയോ ആവശ്യപ്പെടുന്ന മീറ്റിംഗുകളും സാധനങ്ങൾ എടുക്കാനുള്ള സമയവും സ്വയമേവ കലണ്ടറിൽ രേഖപ്പെടുത്തുന്നു.'
                 : 'Automated booking agent for retail visits, B2B wholesale reviews, and deliveries. Dispatches instant confirmation and calendar reminders to clients over WhatsApp.'}
@@ -68,17 +68,17 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
           <div 
             key={apt.id}
             className="glass-panel glass-panel-hover"
-            style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+            style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid var(--line)', background: 'var(--surface)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <span className={`glass-badge ${apt.status === 'confirmed' ? 'glass-badge-emerald' : 'glass-badge-saffron'}`} style={{ fontSize: '0.68rem', marginBottom: '6px' }}>
                   {apt.status === 'confirmed' ? '✓ Confirmed' : '⏳ Pending Confirmation'}
                 </span>
-                <h3 className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+                <h3 className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink)' }}>
                   {apt.customerName}
                 </h3>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
                   {apt.phone}
                 </p>
               </div>
@@ -87,27 +87,27 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
                 width: '38px', 
                 height: '38px', 
                 borderRadius: '50%', 
-                background: 'rgba(99, 102, 241, 0.15)', 
+                background: 'var(--soft)', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                color: '#a5b4fc'
+                color: 'var(--accent-d)'
               }}>
                 <Clock size={18} />
               </div>
             </div>
 
-            <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)' }}>
-              <p className="font-ml" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--tint)', border: '1px solid var(--line)' }}>
+              <p className="font-ml" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink)' }}>
                 {language === 'ml' ? apt.serviceMl : apt.service}
               </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '0.75rem', color: 'var(--muted)' }}>
                 <span>📅 {apt.date}</span>
                 <span>⏱ {apt.timeSlot}</span>
               </div>
             </div>
 
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', fontStyle: 'italic' }}>
               "{apt.notes}"
             </p>
 
@@ -128,7 +128,7 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
             )}
 
             {apt.status === 'confirmed' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--emerald-light)', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--accent-d)', marginTop: 'auto', fontWeight: 600 }}>
                 <CheckCircle2 size={14} />
                 <span>WhatsApp reminder scheduled 1h before slot</span>
               </div>

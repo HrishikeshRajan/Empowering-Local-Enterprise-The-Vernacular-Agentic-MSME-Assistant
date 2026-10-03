@@ -4,17 +4,20 @@ import { store } from '../data/store.js';
 
 export const agentRouter = Router();
 
-// Store active SSE clients
-const sseClients: Response[] = [];
+// SSE client registry — use a Set so removal is O(1)
+const sseClients = new Set<Response>();
 
 export function broadcastAgentEvent(data: any) {
+  const payload = `data: ${JSON.stringify(data)}\n\n`;
+  const dead: Response[] = [];
   sseClients.forEach(client => {
     try {
-      client.write(`data: ${JSON.stringify(data)}\n\n`);
+      client.write(payload);
     } catch {
-      // client disconnected
+      dead.push(client); // collect stale connections
     }
   });
+  dead.forEach(c => sseClients.delete(c));
 }
 
 /**
@@ -116,15 +119,10 @@ agentRouter.get('/stream', (req: Request, res: Response) => {
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
-  sseClients.push(res);
+  sseClients.add(res);
 
   // Send initial ping
   res.write(`data: ${JSON.stringify({ type: 'CONNECTED', message: 'Agent SSE stream ready' })}\n\n`);
 
-  req.on('close', () => {
-    const idx = sseClients.indexOf(res);
-    if (idx !== -1) {
-      sseClients.splice(idx, 1);
-    }
-  });
+  req.on('close', () => sseClients.delete(res));
 });
