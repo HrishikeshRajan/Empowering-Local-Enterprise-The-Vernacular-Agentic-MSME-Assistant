@@ -27,6 +27,8 @@ export function KadaIconSprite() {
         <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></symbol>
         <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 4l-8.3 14h19.9l-8.3-14a2 2 0 0 0-3.3 0z" /></symbol>
+        <symbol id="i-set"   viewBox="0 0 24 24"><path d="M4 7h9m4 0h3M4 17h3m4 0h9M15 5v4M9 15v4" /></symbol>
+        <symbol id="i-plus"  viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
       </defs>
     </svg>
   );

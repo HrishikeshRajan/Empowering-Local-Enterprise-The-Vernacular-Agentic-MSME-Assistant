@@ -1,278 +1,249 @@
-# Kada Design System Brief (for an LLM agent)
+# Kada Design System (LLM-readable spec)
 
-Use this document as the source of truth when building or extending the Kada landing page or app UI. Kada is a Malayalam and English voice assistant for small businesses in Kerala. The look is **calm, premium, light, and green**.
+**Purpose:** when asked to build any UI for Kada, read this file first, then build using ONLY these tokens, patterns and rules. Machine-readable twin: `kada-design-tokens.json`.
 
----
+## 0. Design DNA (paste this into any prompt)
 
-## 0. Instructions to the agent
+> Kada is a Malayalam-first voice/WhatsApp assistant for small shops (MSMEs). The look is **calm, premium, light mint**: pale green-white backgrounds with soft aurora glows, **frosted-glass cards**, very large rounded corners, deep-green (#2c5a43) hero surfaces, a single green accent (#3f7a5c), amber ONLY for "needs your attention". Type is a tight, modern grotesk (Hanken Grotesk) with Noto Sans Malayalam for Malayalam; the serif (Newsreader) is used only for the wordmark. Shadows are soft, green-tinted, long and low-opacity. Motion is smooth and short, with one signature easing. Everything is mobile-first, thumb-friendly (≥44px targets), and respects reduced motion. It must never look like a default Bootstrap/admin template.
 
-1. Use only the tokens in this document. Do not invent new colors, fonts, radii or shadows.
-2. Light theme only. Do not add dark mode.
-3. One accent color (muted emerald). Everything else is white, off-white, sage tints and ink.
-4. Design mobile first (375px), then scale up to desktop (1080px container).
-5. Show the product working (animated demos) instead of describing it.
-6. Never place two pill-shaped elements directly above or below each other on mobile.
-7. Respect `prefers-reduced-motion` and keep every interactive target at least 40px high (primary buttons 48px).
-8. Label any demo numbers as sample data.
+## 1. Product context
 
----
+| Item | Value |
+|---|---|
+| Product | Kada, Vernacular MSME Assistant |
+| Users | Shop owners in Kerala; Malayalam first, English second |
+| Surfaces | Marketing site (hero, features), app dashboard, intro splash, voice sheet |
+| Personality | Calm, trustworthy, plain-spoken, quietly premium |
+| Theme | Light only (no dark mode yet) |
+| Logo | Leaf mark `border-radius:50% 50% 50% 12%` in accent + "Kada" in Newsreader 500 |
 
-## 1. Color palette
+## 2. Color
 
-### Core tokens
-
+### 2.1 Core tokens
 | Token | Hex | Use |
 |---|---|---|
-| `--bg` | `#f8fbf8` | Page background (off-white with a green tint) |
-| `--surface` | `#ffffff` | Cards, nodes, chat bubbles, phone shell |
-| `--tint` | `#f0f6f1` | Phone screen, inset panels, stat tiles |
-| `--line` | `#dde7df` | All 1px borders and dividers |
-| `--ink` | `#1b2a23` | Headings and body text |
-| `--muted` | `#5f7167` | Secondary text, captions (about 5:1 on `--bg`) |
-| `--accent` | `#3f7a5c` | Primary buttons, links, active states (white text on it is about 5.1:1) |
-| `--accent-d` | `#2c5a43` | Hover state, text on soft green, icons |
-| `--soft` | `#e3efe7` | Soft green fills: selected tab, chips, icon tiles, code card |
-| `--on` | `#ffffff` | Text on `--accent` |
+| `--bg` | `#f8fbf8` | Page background (dashboard uses `#f6faf7`) |
+| `--surface` | `#ffffff` | Solid cards, inputs, phone screen |
+| `--tint` | `#f0f6f1` | Subtle fills, segmented-control track, hover |
+| `--line` | `#dde7df` | Hairline borders, dividers |
+| `--ink` | `#1b2a23` | Primary text, dark buttons (never pure black) |
+| `--muted` | `#5f7167` | Secondary text, labels |
+| `--accent` | `#3f7a5c` | Brand accent, primary actions, success |
+| `--accent-d` | `#2c5a43` | Accent text, hover, active nav, hero base |
+| `--soft` | `#e3efe7` | Accent-tinted fills: chips, icon wells, selected tabs |
+| `--on` | `#ffffff` | Text on accent / ink |
 
-### Aura (ambient background glow)
-
-Three blurred circles on a fixed, non-interactive layer behind the page. Blur is 70px and opacity .55 to .7.
-
-| Name | Hex |
-|---|---|
-| Mint | `#c4e8d3` |
-| Sky teal | `#d3ebef` |
-| Warm cream | `#f1ebc9` |
-
-The base gradient behind them runs `#f8fbf8` to `#f1f7f2`.
-
-### Status colors (use sparingly)
-
-| Meaning | Dot / border | Text | Fill |
+### 2.2 Status colors
+| Role | Text | Fill | Rule |
 |---|---|---|---|
-| Done, success | `#3f7a5c` | `#2c5a43` | `#e3efe7` |
-| Needs attention | `#c58a1f` | `#8a5f0f` | `#f6ecd3` |
+| Success / done | `#2c5a43` | `#e3efe7` | Default positive state |
+| Warning / needs you | `#8a5f0f` | `#f8efd6` (strong: `#f8e7bd`) | **Amber is only for attention/manual mode** |
+| Amber base | `#c58a1f` | | Gradients, manual-mode hero |
+| Danger (proposed, not yet used) | `#9c3a2a` | `#f8e1db` | Use sparingly, only for destructive errors |
 
-### Special surfaces
+### 2.3 Brand supporting colors (decor only, never for text)
+| Name | Hex | Where |
+|---|---|---|
+| Mint glow | `#d4eedf` / `#bfe6cf` | Aurora blobs |
+| Aqua glow | `#d9eef0` / `#cfeaf0` | Aurora blobs |
+| Cream glow | `#f3edcf` / `#f1ebc9` | Aurora blobs |
+| Leaf light | `#5fb98d` / `#4fa57e` | Gradient highlights, charts, active dots on dark |
+| Teal | `#23a08f` / `#2f8f9d` | Gradient text end stop |
+| Forest deep | `#1d4836` / `#1f4d39` | Hero gradient start |
+| Intro wash | `#e7f5ec → #f8fbf8 → #eaf5f3` | Splash background |
 
-| Use | Value |
+### 2.4 Gradients
+| Name | CSS |
 |---|---|
-| Workflow canvas background | `#f6faf7` with a dot grid `rgba(63,122,92,.2)`, 22px spacing |
-| Workflow idle connector | `#c3d6c9`, dashed |
-| Workflow active node | fill `#f2faf5`, border `--accent`, 4px halo `rgba(63,122,92,.14)` |
-| Intro splash | gradient `#e7f5ec` to `#f8fbf8` to `#eaf5f3` |
-| Closing banner | gradient `#d3ebdc` to `#d6ecef` to `#efeccd` |
+| Hero (auto) | `radial-gradient(110% 150% at 100% 0,#58b087,transparent 55%),linear-gradient(135deg,#1d4836,#2c5a43 55%,#3f7a5c)` |
+| Hero (manual) | `radial-gradient(110% 150% at 100% 0,#e2b052,transparent 55%),linear-gradient(135deg,#6f4c0e,#97691a 55%,#c58a1f)` |
+| Gradient text | `linear-gradient(95deg,#2c5a43,#3f7a5c 35%,#23a08f 70%,#5fb98d)` with `background-clip:text` |
+| Page aurora | `radial-gradient(60vmax 50vmax at 0 0,#d4eedf,transparent 60%),radial-gradient(55vmax 50vmax at 100% 10%,#d9eef0,transparent 60%),radial-gradient(50vmax 40vmax at 50% 110%,#f3edcf,transparent 60%)` over `--bg` |
+| Avatar | `linear-gradient(135deg,#bfe6cf,#d3ebef)` |
+| Active nav | `linear-gradient(135deg,#2c5a43,#3f7a5c)` |
+| Dot grid | `radial-gradient(rgba(63,122,92,.2) 1px,transparent 1.3px)` size `22px 22px`, masked with a radial fade |
 
-### Shadows
+### 2.5 Contrast (computed WCAG ratios)
+`ink on bg` 14.4 · `muted on white` 5.2 · `muted on bg` 5.0 · `accent on white` 5.1 · `white on accent` 5.1 · `accent-d on soft` 6.7 · `amber text on amber fill` 4.9 · `white on ink` 15.0. All pass AA for body text. Do not put `accent` text on `soft` below 14px without checking.
 
-| Name | Value |
+## 3. Elevation and glass
+
+### 3.1 Shadow tokens
+| Token | Value | Use |
+|---|---|---|
+| `--ring` | `0 0 0 1px rgba(27,42,35,.06)` | Replaces borders on glass cards |
+| `--shadow` | `0 1px 2px rgba(27,42,35,.04),0 14px 36px rgba(27,42,35,.07)` | Standard card |
+| `--lift` | `0 22px 40px -26px rgba(44,90,67,.35)` | Dashboard cards, tiles (long, low, green) |
+| inset highlight | `inset 0 1px 0 #fff` | Top edge shine on glass |
+| warning lift | `0 22px 40px -26px rgba(197,138,31,.6)` | Amber tiles |
+| hero | `0 34px 50px -30px rgba(44,90,67,.8)` | Green hero card |
+| phone | `0 60px 90px -34px rgba(44,90,67,.5),0 0 0 7px rgba(255,255,255,.4)` | Device mockup |
+| float card | `0 22px 44px -16px rgba(27,42,35,.3)` | Floating glass chips |
+| dark button | `0 14px 30px -10px rgba(27,42,35,.55)` | Primary dark pill |
+| nav | `0 24px 44px -14px rgba(27,42,35,.45)` | Floating bottom nav |
+| fab | `0 0 0 5px rgba(246,250,247,.95),0 14px 26px -6px rgba(44,90,67,.7)` | Mic button with halo |
+
+**Shadow recipe:** large blur, **negative spread**, green-tinted (`44,90,67`) or ink-tinted (`27,42,35`), alpha .07 to .5. Never grey `rgba(0,0,0,…)` hard shadows.
+
+### 3.2 Glass recipe
+`background: rgba(255,255,255,.64–.82); backdrop-filter: blur(10–18px) saturate(1.4–1.6); border: 1px solid rgba(255,255,255,.9) (or --ring); box-shadow: --ring, --lift, inset 0 1px 0 #fff`. Use glass over aurora backgrounds only. On plain surfaces use solid `--surface` with `--line` hairline.
+
+## 4. Shape
+
+| Token | Value | Use |
+|---|---|---|
+| radius-pill | `999px` | Buttons, chips, badges, switch, tabs |
+| radius-xl | `2rem` / `2.2rem` | Bottom sheet, phone |
+| radius-lg | `1.5rem` to `1.7rem` | Cards, hero card |
+| radius-md | `1.1rem` to `1.3rem` | Tiles, floating cards, rows |
+| radius-sm | `.85rem` | Icon wells, dots, nav items |
+| leaf | `50% 50% 50% 12%` | Logo mark, decorative blobs |
+
+Rule: corners are always generously rounded; never use square corners or `4px` radii.
+
+## 5. Spacing and layout
+
+- **Scale (rem):** .25 · .5 · .75 · 1 · 1.25 · 1.5 · 2 · 3 · 4 · 6. Common gaps: .6/.7 (tight lists), 1 (card gap), 1.15 to 1.25 (card padding).
+- **Section gap:** `clamp(3.5rem, 9vw, 6.5rem)`.
+- **Page gutter:** `1.1rem` to `1.25rem` on mobile, `2rem` on desktop.
+- **Max width:** marketing `1080px`; dashboard mobile `900px`, desktop fluid beside a `260px` sidebar.
+- **Breakpoints:** `380` (tiny phones), `700` (tablet: 4 tiles, 2 cols), `860/900` (sidebar appears, bottom nav hides), `960` (hero splits into 2 cols), `1180` (dashboard right rail, 370px).
+- **Touch targets:** minimum 44px, buttons 48px, bottom nav items 52px.
+- **Safe areas:** use `env(safe-area-inset-*)` on fixed bars; `viewport-fit=cover`.
+
+## 6. Typography
+
+| Role | Font | Weight | Size / line-height | Tracking |
+|---|---|---|---|---|
+| Hero H1 | Hanken Grotesk | 600 | `clamp(3rem,8.4vw,5.7rem)` / .97 | -.052em |
+| Page H1 (dashboard) | Hanken + Noto Malayalam | 700 | `clamp(1.7rem,5vw,2.5rem)` / 1.2 | -.02em |
+| Card title | Hanken | 700 | 1.05rem | -.01em |
+| Body | Hanken | 400 | 1rem / 1.6 to 1.65 | 0 |
+| Lead | Hanken | 400 | 1.1rem, `--muted` | 0 |
+| KPI number | Hanken | 600 | 1.6 to 2rem / 1.1, `tabular-nums` | -.03em |
+| Small / meta | Hanken | 400 to 500 | .74 to .86rem, `--muted` | 0 |
+| Eyebrow | Hanken | 600 | .78rem, uppercase, .12em | |
+| Button | Hanken | 500 to 600 | 1rem (small .85rem) | 0 |
+| Wordmark | Newsreader | 500 | 1.5 to 1.6rem (intro 2.8 to 4rem) | -.03em |
+| Malayalam | Noto Sans Malayalam | 400 to 700 | same sizes, line-height ≥1.4 | |
+
+Fonts: `Hanken Grotesk` (400/500/600/700), `Newsreader` (500, serif only for wordmark/logo), `Noto Sans Malayalam` (400 to 700). Stack: `'Hanken Grotesk','Noto Sans Malayalam',system-ui,sans-serif`. Malayalam text must never be clipped: avoid fixed heights, use line clamp (2 lines) instead of truncation when text is long.
+
+## 7. Iconography
+
+24×24 viewBox, **stroke only**, `stroke-width:1.8` (2.2 on active/tiny), `stroke-linecap/linejoin: round`, `fill:none`, `currentColor`. Delivered as an SVG `<symbol>` sprite. Sizes: 17 to 18px (inside chips), 20 to 22px (nav), 26 to 30px (mic). Never use emoji as icons.
+
+Existing set: home, chat, doc (bill), pulse (activity), mic, set (sliders), box (stock), cal, check, alert, plus.
+
+## 8. Motion
+
+| Token | Value | Use |
+|---|---|---|
+| ease-out (signature) | `cubic-bezier(.22,1,.36,1)` | Reveals, cards, sheets |
+| ease-in-out | `cubic-bezier(.65,0,.35,1)` | Wipes, tab changes |
+| ease-fly | `cubic-bezier(.76,0,.24,1)` | Logo flying to nav |
+| ease-spring | `cubic-bezier(.34,1.4,.64,1)` | Pop-in marks, switch knob |
+| micro | `.15–.3s` | Hover, press (`scale(.96)`), toggles |
+| reveal | `.45–.9s` | Entrances; stagger 60 to 100ms |
+| loop | pulse `1.6s`, float `6s`, wave `1s`, halo drift `14s` | Live dots, floating cards, voice bars |
+| intro | ≈2.4s total | Mark pops → word wipes → subtitle → flies to nav |
+
+Rules: animate `transform`/`opacity` only; always add `@media (prefers-reduced-motion:reduce)` that disables animation; entrances use `translateY(8–26px)` + fade.
+
+## 9. Component catalog
+
+| Component | Spec |
 |---|---|
-| Card | `0 1px 2px rgba(27,42,35,.04), 0 14px 36px rgba(27,42,35,.07)` |
-| Phone / dashboard (hero objects) | `0 30px 70px rgba(63,122,92,.16 to .18)` |
-| Primary button | `0 8px 22px rgba(63,122,92,.25)` |
+| **Primary button** | Pill, min-height 48px, bg `--ink`, white text, dark shadow, hover `--accent-d`, optional arrow icon |
+| **Accent button** | Pill, bg `--accent`, white text, hover `--accent-d` |
+| **Ghost button** | Pill, glass bg `rgba(255,255,255,.7)`, `--line` border, blur 8px |
+| **Small action** | Pill, min-height 40px, bg `--ink`, .85rem 600 (e.g., "Reply") |
+| **Chip (quick action)** | Pill 48px, glass bg, 1.9rem circular `--soft` icon well, scrolls horizontally on mobile |
+| **Badge** | Pill, .74rem 700, `--soft`/`--accent-d` (done) or amber pair (attention) |
+| **Card** | Glass recipe, radius 1.5rem, padding 1.15rem, title row = H2 + count/badge |
+| **KPI tile** | Radius 1.3rem, icon well 2.4rem (`--soft`), number 1.9rem, label .85rem muted; warning variant = amber gradient + clickable |
+| **List item** | Icon dot 2.4rem (radius .85rem) + text (title 600, meta .85rem muted, 2-line clamp) + action/badge, hairline dividers |
+| **Timeline slot** | Time column 3.6rem, vertical hairline, accent dot with `--soft` halo |
+| **Hero status card** | Deep-green gradient, white text, pulse dot, switch right; turns amber in manual mode |
+| **Switch** | 3.6×2.1rem pill, 1.56rem knob, spring easing, `role="switch"` |
+| **Segmented tabs** | `--tint` track, selected = white pill with tiny shadow |
+| **Sidebar (≥900)** | Floating glass panel, radius 1.8rem, active item = accent gradient + white text |
+| **Bottom nav (<900)** | Floating glass bar, radius 1.8rem, 5 slots, centre raised FAB (accent gradient + halo ring) |
+| **Bottom sheet** | White, radius 2rem top, slide-up, pulsing mic rings + waveform, dims page with blur |
+| **Toast** | Ink pill, white 600 text, slides up, `role="status"` |
+| **Phone mockup** | Radius 2.2rem, glossy white frame, soft green shadow, 3D tilt (-9° Y, 3° X) on desktop only |
+| **Floating glass card** | Glass, radius 1.15rem, `bob` float, parallax on pointer (desktop only) |
 
-### Copy-paste tokens
+## 10. Page patterns
+
+- **Hero:** 2-col ≥960 (copy left, product right); eyebrow live pill → H1 (gradient 2nd line) → Malayalam tagline with leading rule → lead → dark primary + ghost button → trust row. Mobile: single column, full-width stacked buttons, compact demo card (no phone frame).
+- **Dashboard:** greeting header (Malayalam first) → status hero with switch → 4 KPI tiles → "Needs you" (actionable) → quick-action chips → bookings timeline → activity feed. Desktop ≥1180: right rail for attention + bookings.
+- **Intro splash:** mark pops, word wipes, Malayalam subtitle, logo flies onto the nav logo; no other text.
+
+## 11. Voice and content
+
+- Malayalam first, English second; plain, warm, short. Sample/placeholder data is always labelled ("Sample data").
+- Status copy is calm and reassuring ("Kada is handling messages"), never alarmist.
+- Numbers use `tabular-nums` and Indian grouping (₹38,055, ₹18,420).
+
+## 12. Do / Don't
+
+**Do:** one accent; soft green-tinted shadows; big radii; glass over aurora; generous whitespace; hierarchy through size and weight; tabular numerals; 44px+ targets; reduced-motion support.
+
+**Don't:** pure black or grey shadows; thin grey bordered white cards; coloured left-border stripes; dark-grey "admin" sidebars; Bootstrap-like blue/red; more than one saturated hue per screen; amber for decoration; emoji icons; fixed-height boxes around Malayalam text; animating layout properties.
+
+## 13. How an LLM should work (procedure)
+
+1. **Identify the surface** (marketing, dashboard, form, modal, email) and pick the matching pattern in section 10.
+2. **Inject tokens:** define the `:root` variables from section 14 verbatim. Never invent new hex values; derive tints from `--accent` or `--amber` only if essential.
+3. **Compose with components** from section 9; reuse their sizes, radii and shadows.
+4. **Set type:** Hanken for UI, Noto Sans Malayalam for Malayalam, Newsreader only for the wordmark.
+5. **Add motion** with the signature easing and a reduced-motion fallback.
+6. **Make it responsive** mobile-first using the section 5 breakpoints.
+7. **Self-check** with section 15 before answering.
+
+**To analyze an existing Kada codebase:** read `:root` variables first (`--bg --accent --ink …`), then search for `backdrop-filter`, `box-shadow`, `border-radius`, `cubic-bezier`, `@font-face`/Google Fonts links and the icon sprite; compare against this spec and flag deviations.
+
+## 14. Copy-paste CSS foundation
 
 ```css
 :root{
   color-scheme:light;
-  --bg:#f8fbf8; --surface:#ffffff; --tint:#f0f6f1; --line:#dde7df;
-  --ink:#1b2a23; --muted:#5f7167;
-  --accent:#3f7a5c; --accent-d:#2c5a43; --soft:#e3efe7; --on:#fff;
+  --bg:#f8fbf8; --surface:#fff; --tint:#f0f6f1; --line:#dde7df;
+  --ink:#1b2a23; --muted:#5f7167; --accent:#3f7a5c; --accent-d:#2c5a43;
+  --soft:#e3efe7; --on:#fff;
+  --amber:#c58a1f; --amber-t:#8a5f0f; --amber-bg:#f8efd6;
+  --card:rgba(255,255,255,.8);
+  --ring:0 0 0 1px rgba(27,42,35,.06);
   --shadow:0 1px 2px rgba(27,42,35,.04),0 14px 36px rgba(27,42,35,.07);
-  --gap:clamp(3.5rem,9vw,6.5rem); /* section padding; 2.75rem on mobile */
+  --lift:0 22px 40px -26px rgba(44,90,67,.35);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --font:'Hanken Grotesk','Noto Sans Malayalam',system-ui,sans-serif;
+  --gap:clamp(3.5rem,9vw,6.5rem);
 }
+body{font:400 1rem/1.6 var(--font);color:var(--ink);
+  background:radial-gradient(60vmax 50vmax at 0 0,#d4eedf,transparent 60%),
+             radial-gradient(55vmax 50vmax at 100% 10%,#d9eef0,transparent 60%),
+             radial-gradient(50vmax 40vmax at 50% 110%,#f3edcf,transparent 60%),var(--bg);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.card{background:var(--card);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-radius:1.5rem;padding:1.15rem;box-shadow:var(--ring),var(--lift),inset 0 1px 0 #fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:48px;
+  padding:.8rem 1.6rem;border-radius:999px;background:var(--ink);color:#fff;font-weight:500;
+  box-shadow:0 14px 30px -10px rgba(27,42,35,.55);transition:background .25s}
+.btn:hover{background:var(--accent-d)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 ```
 
----
+## 15. Self-check before delivering
 
-## 2. Typography
-
-| Role | Font | Weight | Notes |
-|---|---|---|---|
-| Headings | **Newsreader** (serif) | 500 | Gives the premium, editorial feel. Letter-spacing `-.015em`, line-height 1.1 |
-| Body and UI | **Hanken Grotesk** | 400, 500, 600 | Clean sans. Body 1.05rem / 1.65 |
-| Malayalam text | **Noto Sans Malayalam** | 400, 500 | Always set as the fallback of headings and use the `.ml` class on Malayalam runs |
-| Code / JSON | `ui-monospace` | 400 | Small, in the soft green code card |
-
-### Type scale
-
-| Element | Desktop | Mobile |
-|---|---|---|
-| Hero H1 | `clamp(3rem, 10.5vw, 5.4rem)`, line-height 1.02 | 2.7rem |
-| Malayalam hook line above H1 | `clamp(1.5rem, 4.5vw, 2rem)`, accent color | 1.3rem |
-| Section H2 | `clamp(1.9rem, 4.5vw, 2.8rem)` | 1.8rem |
-| Card H3 | 1.3 to 1.4rem | 1.2rem |
-| Lead paragraph | 1.15rem, `--muted` | 1rem |
-| Body | 1.05rem | 1.05rem |
-| Small / caption | .85 to .95rem, `--muted` | same |
-| Eyebrow label | .8rem, 600, uppercase, letter-spacing .12em, `--accent` | same |
-| Code / badges | .78 to .85rem | same |
-| Workflow node title / subtitle | `max(12.5px, 1.45cqw)` / `max(10.5px, 1.15cqw)` | `max(14px, 4.2cqw)` / `max(11.5px, 3.3cqw)` |
-
-Rules: one H1 per page. Headings are short and plain. Max line length is about 34rem for paragraphs. Never use gradient-clipped text (it breaks on mobile Safari with Malayalam). Highlight a key phrase by coloring it `--accent` instead.
-
----
-
-## 3. Layout and spacing
-
-- Container: max-width 1080px, side padding 1.25rem.
-- Section padding: `--gap` (3.5 to 6.5rem on desktop, 2.75rem on mobile). Sections are separated by a 1px hairline `rgba(63,122,92,.14)`.
-- Grid gaps: 1rem for cards, 3rem between the two hero columns on desktop, 1.6rem on mobile.
-- Radii: cards 1.3rem, phone shell 2.2rem, phone screen 1.7rem, chat bubbles 1rem (with a .3rem corner toward the sender), buttons and chips 999px.
-- Breakpoints: 860px (layout switch) and 900px (workflow canvas switches between horizontal and vertical).
-- Safe areas: apply `env(safe-area-inset-*)` on `:root` and the bottom dock.
-
----
-
-## 4. Components
-
-| Component | Spec |
-|---|---|
-| **Primary button** | Pill, `--accent` fill, white text, 48px min height, 1rem / 500. Hover: `--accent-d` |
-| **Ghost button** | Pill, white 70% fill, 1px `--line` border, `--ink` text, no shadow |
-| **Bottom dock (mobile)** | 4-tab thumb navigation (Home, Inbox, Bills, Activity) or single primary button fixed to bottom with `env(safe-area-inset-bottom)`. Height 64px, `--surface` background, 1px `--line` border |
-| **Card** | White at 85 to 92% opacity, 1px `--line`, radius 1.3rem, card shadow. The "soft" variant uses `rgba(227,239,231,.9)` |
-| **Icon tile** | 2.7rem square, radius .9rem, `--soft` fill, line icon in `--accent-d`, 1.7px stroke, round caps. Icons are 18 to 22px |
-| **Phone mockup** | White 85% shell, 1px `--line`, padding .55rem, screen in `--tint`. Hero phone has a **fixed height of 480px** with hidden overflow so content never changes the layout |
-| **Chat bubble (incoming)** | White, 1px `--line`, bottom-left corner .3rem |
-| **Chat bubble (outgoing)** | `--accent` fill, white text, bottom-right corner .3rem |
-| **Code card** | `--soft` fill, `--accent-d` text, monospace, radius .8rem |
-| **Tabs** | Pill group in white with a 1px border. Selected tab: `--soft` fill and `--accent-d` text |
-| **Check row** | 1.3rem circle. Green fill with a tick for done, amber fill with "!" for needs attention |
-| **Badges** | "Done": `--soft` and `--accent-d`. "Needs you": `#f6ecd3` and `#8a5f0f`. Pill, .75rem, 600 |
-| **Switch** | 3.4 by 2rem track, `--accent` when on, white knob. Toggles between autonomous handling and manual merchant control |
-| **Workflow node** | White card, radius 1rem, 1px `--line`, soft shadow, icon tile plus title and subtitle. Active state as in the palette section |
-| **Eyebrow** | Small uppercase accent label above every section H2 |
-| **Stat Tile (KPI Card)** | `--surface` background, 1px `--line`, radius 1.2rem, card shadow. Large numeral (Newsreader/Grotesk 700, 2rem, `--ink`), label (`--muted`, .85rem, 500) |
-| **Triage Alert Card** | High-priority item needing merchant review. Background `#f6ecd3`, 1px border `#c58a1f`, radius 1.1rem, amber `!` badge, title in bold `--ink`, timestamp in `--muted` |
-| **Booking Row** | Schedule item with time badge (`--soft` background, `--accent-d` text), customer name and service caption, status pill ("Booked" in `--soft`/`--accent-d`) |
-| **Reflection Trace Tree** | Vertical step-by-step disclosure showing autonomous checks (Draft -> Check slots -> Review clash -> Auto-fix). 1px vertical connecting line |
-| **Onboarding Stepper** | Step X of 4 progress indicator, clean form fields (48px height, 1px `--line`), mic calibration button with affirmative `✓` confirmation |
-| **Voice Listening Overlay** | Ambient pulsing green aura (`#c4e8d3`), live Malayalam speech transcription in Noto Sans Malayalam, instant confirmation toast |
-
----
-
-## 5. Screen & Page Architectures
-
-### 5.A Landing Page structure (in order)
-
-1. **Intro splash** (about 3s): logo mark, "Kada" letters, Malayalam "കട", a short count-up bar, then a curtain slides up.
-2. **Hero**: Malayalam hook, large headline, one-line value, live activity line, two buttons, animated phone demo that loops through Voice note, Bill and WhatsApp.
-3. **How it works**: a live node-graph workflow (Voice note, Speech to text, Intent, Do the task, Review and fix, Reply sent) with a packet that travels along the connectors.
-4. **Features**: 8-card bento grid (two wide cards, six standard).
-5. **Bill reader**: sample receipt, scan-line animation, clean JSON output.
-6. **Dashboard preview**: stat tiles, activity feed, working Auto/Manual switch. Marked as sample data.
-7. **Getting started**: four steps with a progress bar.
-8. **Tech stack**: small chips (a single swipeable row on mobile).
-9. **Closing banner and footer.**
-
-### 5.B App Dashboard & Operations Screens (in order)
-
-Designed mobile-first (375px viewport) for one-handed operation in local retail/tailoring shops:
-
-1. **Global App Shell & Navigation**
-   * Top bar: Brand `[ കട / Kada ]`, shop avatar `[A]`, shop name **Anitha's Tailoring**, *Sample shop* tag, and setup trigger `[A](#setup)`.
-   * Bottom dock: Persistent 4-tab thumb bar: `[Home](#home)`, `[Inbox](#inbox)`, `[Bills](#bills)`, `[Activity](#activity)`.
-2. **Screen 1: Home Cockpit (`#home`)**
-   * Malayalam salutation: `നമസ്കാരം, അനിത` (Noto Sans Malayalam, `--accent-d`).
-   * H1 Headline: `Good morning, Anitha` (Newsreader 500, 2rem).
-   * Daily status: `Here is what Kada handled for you today.`
-   * Autonomous mode switch: `Kada is handling messages` / `Switch off to take control yourself.`
-   * 4 KPI Stat Tiles: `12 Bookings`, `5 Bills read`, `38 Chats handled`, `2 Need you`.
-   * "Needs you" Triage Feed: `! Bulk order from Rahul (10:42)` -> links to `#inbox`, `! Rice stock is low (09:05)` -> links to `#activity`.
-   * Today's Bookings Feed: `10:30 Suresh, 2 people` (Fitting, moved to 10:30), `4:00 pm Meera` (Blouse fitting). Both marked `Booked`.
-   * Footer caption: `Sample data for illustration.`
-3. **Screen 2: WhatsApp Inbox (`#inbox`)**
-   * Eyebrow `WhatsApp`, H1 `# Inbox`.
-   * Description: `Every customer message in one place. Select a chat to see the conversation.`
-   * Customer threads with lead badges (`! Needs you` vs `✓ Auto-replied`).
-   * One-tap manual takeover toggle.
-4. **Screen 3: Bill Reader (`#bills`)**
-   * Eyebrow `Bill reader`, H1 `# Bills`.
-   * Description: `Photograph a bill. Kada saves tidy records.`
-   * Primary camera snap / photo upload button (min 48px).
-   * Structured invoice record (e.g. Sree Lakshmi Traders, Alappuzha, 3 line items, math reconciliation: `total_matches_items: true`).
-5. **Screen 4: Autonomous Activity Log (`#activity`)**
-   * Eyebrow `Agent log`, H1 `# Activity`.
-   * Description: `What Kada did, in plain words.`
-   * Chronological event timeline with status icons (`!` for alerts, `✓` for completed jobs).
-   * Expandable Reflection Loop Tree on bookings:
-     * 1. Draft the booking
-     * 2. Check free slots
-     * 3. Review: clash found at 10:00
-     * 4. Fix: moved to 10:30
-6. **Screen 5: Getting Started Wizard (`#setup`)**
-   * Eyebrow `Getting started`, H1 `# Live in 2 minutes`.
-   * Stepper: Step 1 of 4.
-   * Step 1: `Name your shop` (Business name input).
-   * Step 2: `Set your hours` (Opening & closing time).
-   * Step 3: `Add your first service` (Name & price in rupees).
-   * Step 4: `Send a voice note` (Vernacular speech test: "Tap and say something in Malayalam" -> `✓`).
-   * Live completion: `### You are live. Kada is ready to take your customers.` -> `[Go to home](#home)`.
-7. **Screen 6: Live Voice Assistant Overlay (`#listening`)**
-   * Ambient pulsing aura.
-   * State: `### Listening`.
-   * Vernacular transcript display and instant confirmation toast: `Booking saved: Meera, tomorrow 4:00 pm ✓`.
-
----
-
-## 6. Motion
-
-Library: GSAP 3.12.5 and ScrollTrigger from cdnjs. All motion is subtle and meaningful.
-
-| Moment | Behavior |
-|---|---|
-| Intro | Mark pops in (`back.out(1.6)`), letters rise with .07s stagger, bar fills in .9s, curtain slides up .9s `power4.inOut` |
-| Hero entrance | Elements fade up 26px with .1s stagger, .9s `power3.out` |
-| Section reveals | Headings, cards and chips fade up 30 to 50px, `power3.out`, trigger at 85 to 92% of the viewport, **once only** |
-| Hero phone | Auto-plays three demos in a loop, each followed by a 2.4s pause, then switches tab. Tapping a tab jumps to it and the loop continues |
-| Workflow | Nodes pop in one by one with their connector drawing itself. A glowing packet then loops along the path (1.05s per step) and lights each node as it arrives. Pauses when off screen |
-| Ambient | Aura blobs drift slowly (24s, alternate). Status dots pulse (1.6s) |
-| Reduced motion | Disable all animation and show final states |
-
-Mobile performance rules: no `backdrop-filter` on cards, no pinned scroll sections, `ScrollTrigger.config({ignoreMobileResize:true})`, and use `100svh` rather than `100vh`.
-
----
-
-## 7. Design principles used
-
-1. **Calm over loud.** One muted green accent, lots of white, no neon. The audience is busy shop owners and the interface should lower stress.
-2. **Premium through restraint.** Serif headings, hairline borders, soft shadows, generous spacing, and few effects.
-3. **Show, do not tell.** Animated demos and a live workflow explain the product faster than paragraphs.
-4. **Local first.** Malayalam appears in the hero, the demos and the replies. Malayalam text uses its own font and is never an afterthought.
-5. **Mobile first.** Compact hero, thumb-reachable action at the bottom, short scrolls, and no clutter of chips or floating cards on small screens.
-6. **Honest content.** Every number in a demo is labeled as a sample.
-7. **Clarity of state.** Green means done, amber means needs you. Nothing else uses amber.
-8. **Stable layout.** Fixed-height demo containers and aspect-ratio canvases prevent content from jumping while animations play.
-9. **Accessible by default.** At least 5:1 text contrast, visible 2px focus rings with 3px offset, 40 to 48px touch targets, `aria-live` on changing demo content, and reduced-motion support.
-10. **Performance.** Light effects only, one animation library, inline SVG icons, and no external images.
-
----
-
-## 8. Do and do not (lessons learned from user feedback)
-
-| Do | Do not |
-|---|---|
-| Keep the page light, with a soft aura glow | Add dark mode or heavy dark blocks |
-| Use muted greens, with cream and teal as quiet supporting tints | Use saturated or neon greens (lime was rejected as stressful) |
-| Use filled soft shapes for background pulses | Use thin outlined ripple lines |
-| Keep the workflow canvas clean, with small icons | Let SVG icons inherit canvas sizing rules (scope canvas SVG rules to the direct child) |
-| Hide secondary chips and floating cards on mobile | Stack pills vertically on mobile |
-| Show the sticky bottom button only after the hero | Duplicate the hero button directly on top of the phone demo |
-| Keep the hero phone at a fixed height | Let the demo content resize the phone |
-| Keep scroll distances short on mobile | Pin the screen for long scroll distances |
-| Keep animation tied to meaning (data flowing through the agent) | Add decorative floating parallax layers or a progress bar under the tabs |
-| Keep dashboard screens single-column on mobile with thumb-reachable primary actions | Overload the dashboard with dense analytics, charts, or multiple nested columns |
-| Segregate autonomous jobs (green `✓`) from items needing merchant triage (amber `!`) | Use red for stock or urgent alerts (amber is the sole attention color to preserve calm) |
-| Disclose autonomous agent reasoning in plain language ("moved to 10:30 due to clash at 10:00") | Expose machine-learning or technical jargon (e.g. "reflection loop retry count 2") to the shop owner |
-
----
-
-## 9. Voice and copy
-
-- Plain words, short sentences, no jargon (say "reads your bills", not "OCR pipeline").
-- Lead with the benefit for the shop owner: "Speak. Kada does the rest."
-- Headlines: 3 to 7 words. Section intros: one sentence.
-- Use sample data that is realistic for Kerala (Alappuzha supplier, rice, sugar, oil, fitting bookings, amounts in rupees).
-- Technical terms (NestJS, Prisma, Redis, Whisper) belong only in the tech stack row.
+- [ ] Only tokens from this file; no new colors; no pure black; amber only for attention.
+- [ ] Glass cards sit on the aurora; shadows are soft, long, green/ink-tinted.
+- [ ] Radii ≥ .85rem everywhere; pills for controls.
+- [ ] Malayalam renders in Noto Sans Malayalam with room for taller line-height; no clipping.
+- [ ] Touch targets ≥ 44px; safe-area padding on fixed bars; works at 320, 390, 768, 1280.
+- [ ] Hover/focus/active states exist; focus ring visible; keyboard works.
+- [ ] Reduced-motion fallback present; only transform/opacity animated.
+- [ ] Contrast ≥ 4.5:1 for text; icons stroke-based `currentColor`.
+- [ ] Does not resemble a default Bootstrap/admin template.

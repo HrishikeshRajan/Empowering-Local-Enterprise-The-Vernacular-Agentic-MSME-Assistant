@@ -200,17 +200,25 @@ export async function getStoreSettings(): Promise<{ profile: StoreProfile; setti
 }
 
 export async function updateStoreProfile(profile: Partial<StoreProfile>): Promise<StoreProfile> {
+  const fallback = { ...STORE_PROFILE, ...profile };
   return safeFetch<StoreProfile>('/settings/profile', {
     method: 'PUT',
     body: JSON.stringify(profile)
-  });
+  }, fallback);
 }
 
 export async function updateStorePreferences(prefs: any): Promise<StoreSettings> {
+  const fallback = {
+    ...MOCK_STORE_SETTINGS,
+    contactPreferences: {
+      ...MOCK_STORE_SETTINGS.contactPreferences,
+      ...prefs
+    }
+  };
   return safeFetch<StoreSettings>('/settings/preferences', {
     method: 'PUT',
     body: JSON.stringify(prefs)
-  });
+  }, fallback);
 }
 
 export async function getSystemHealth(): Promise<SystemHealthStatus> {

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { Language, NavTab } from './types';
+import type { Language, NavTab, StoreProfile } from './types';
 import './styles/dashboard.css';
+import { STORE_PROFILE } from './mockData';
+import { getStoreSettings, updateStoreProfile } from './api/client';
 import { LandingPage } from './components/LandingPage';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -27,6 +29,45 @@ export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('overview');
   const [language, setLanguage] = useState<Language>('ml');
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [storeProfile, setStoreProfile] = useState<StoreProfile>(() => {
+    try {
+      const saved = localStorage.getItem('kada_store_profile');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return STORE_PROFILE;
+  });
+
+  useEffect(() => {
+    getStoreSettings().then(res => {
+      if (res?.profile) {
+        setStoreProfile(prev => {
+          try {
+            const saved = localStorage.getItem('kada_store_profile');
+            if (saved) return { ...res.profile, ...JSON.parse(saved) };
+          } catch {}
+          return res.profile;
+        });
+      }
+    }).catch(console.warn);
+  }, []);
+
+  const handleUpdateProfile = async (newProfile: Partial<StoreProfile>): Promise<StoreProfile> => {
+    try {
+      const updated = await updateStoreProfile(newProfile);
+      setStoreProfile(updated);
+      try {
+        localStorage.setItem('kada_store_profile', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    } catch {
+      const fallback: StoreProfile = { ...storeProfile, ...newProfile } as StoreProfile;
+      setStoreProfile(fallback);
+      try {
+        localStorage.setItem('kada_store_profile', JSON.stringify(fallback));
+      } catch {}
+      return fallback;
+    }
+  };
 
   useEffect(() => {
     const handlePopState = () => {
@@ -87,15 +128,13 @@ export function App() {
     <>
       <KadaIconSprite />
       <div className="app">
-        {/* Ambient background (desktop) */}
-        <div className="aura" aria-hidden="true"><i /><i /><i /></div>
-
         {/* Sidebar (desktop ≥ 900 px) */}
         <Sidebar
           currentTab={currentTab}
           onTabChange={setCurrentTab}
           language={language}
           onBackToLanding={handleBackToLanding}
+          storeProfile={storeProfile}
         />
 
         {/* Main column */}
@@ -107,6 +146,7 @@ export function App() {
             onLanguageChange={setLanguage}
             onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
             onBackToLanding={handleBackToLanding}
+            storeProfile={storeProfile}
           />
 
           <main className="main">
@@ -115,6 +155,7 @@ export function App() {
                 language={language}
                 onNavigate={setCurrentTab}
                 onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
+                storeProfile={storeProfile}
               />
             )}
             {currentTab === 'whatsapp' && <WhatsAppHub language={language} />}
@@ -124,7 +165,13 @@ export function App() {
               <InventoryManager language={language} onOpenVoiceModal={() => setIsVoiceModalOpen(true)} />
             )}
             {currentTab === 'appointments' && <Appointments language={language} />}
-            {currentTab === 'settings' && <StoreSettings language={language} />}
+            {currentTab === 'settings' && (
+              <StoreSettings 
+                language={language} 
+                storeProfile={storeProfile}
+                onUpdateProfile={handleUpdateProfile}
+              />
+            )}
           </main>
         </div>
       </div>

@@ -2,7 +2,7 @@
   color-scheme: light;
 
   /* Kada Design System Core Tokens (matching landing.html) */
-  --bg: #f8fbf8;
+  --bg: #f6faf7;
   --surface: #ffffff;
   --tint: #f0f6f1;
   --line: #dde7df;
@@ -65,15 +65,15 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
   color: var(--ink);
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(circle at 15% 15%, rgba(196, 232, 211, 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(211, 235, 239, 0.3) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(241, 235, 201, 0.2) 0%, transparent 50%);
+  background:
+    radial-gradient(60vmax 50vmax at 0 0,    #d4eedf, transparent 60%),
+    radial-gradient(55vmax 50vmax at 100% 10%,#d9eef0, transparent 60%),
+    radial-gradient(50vmax 40vmax at 50% 110%,#f3edcf, transparent 60%),
+    var(--bg);
   background-attachment: fixed;
   overflow-x: hidden;
 }

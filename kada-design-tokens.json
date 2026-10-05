@@ -1,0 +1,385 @@
+{
+ "$schema": "kada-design-tokens/1.0",
+ "meta": {
+  "name": "Kada Design System",
+  "product": "Kada, Vernacular MSME Assistant",
+  "theme": "light only: calm mint, glass, premium",
+  "languages": [
+   "ml",
+   "en"
+  ],
+  "principles": [
+   "Malayalam first",
+   "one accent (green)",
+   "amber only for attention",
+   "soft green-tinted shadows",
+   "big radii",
+   "glass over aurora",
+   "mobile first, 44px+ targets",
+   "never default Bootstrap look"
+  ]
+ },
+ "color": {
+  "core": {
+   "bg": "#f8fbf8",
+   "bgDashboard": "#f6faf7",
+   "surface": "#ffffff",
+   "tint": "#f0f6f1",
+   "line": "#dde7df",
+   "ink": "#1b2a23",
+   "muted": "#5f7167",
+   "accent": "#3f7a5c",
+   "accentDark": "#2c5a43",
+   "soft": "#e3efe7",
+   "on": "#ffffff"
+  },
+  "status": {
+   "success": {
+    "text": "#2c5a43",
+    "fill": "#e3efe7"
+   },
+   "warning": {
+    "text": "#8a5f0f",
+    "fill": "#f8efd6",
+    "fillStrong": "#f8e7bd",
+    "base": "#c58a1f"
+   },
+   "danger_proposed": {
+    "text": "#9c3a2a",
+    "fill": "#f8e1db"
+   }
+  },
+  "decor": {
+   "mintGlow": "#d4eedf",
+   "mintGlow2": "#bfe6cf",
+   "aquaGlow": "#d9eef0",
+   "aquaGlow2": "#cfeaf0",
+   "creamGlow": "#f3edcf",
+   "creamGlow2": "#f1ebc9",
+   "leafLight": "#5fb98d",
+   "leafMid": "#4fa57e",
+   "teal": "#23a08f",
+   "forestDeep": "#1d4836",
+   "forestDeep2": "#1f4d39"
+  },
+  "gradient": {
+   "heroAuto": "radial-gradient(110% 150% at 100% 0,#58b087,transparent 55%),linear-gradient(135deg,#1d4836,#2c5a43 55%,#3f7a5c)",
+   "heroManual": "radial-gradient(110% 150% at 100% 0,#e2b052,transparent 55%),linear-gradient(135deg,#6f4c0e,#97691a 55%,#c58a1f)",
+   "text": "linear-gradient(95deg,#2c5a43,#3f7a5c 35%,#23a08f 70%,#5fb98d)",
+   "pageAurora": "radial-gradient(60vmax 50vmax at 0 0,#d4eedf,transparent 60%),radial-gradient(55vmax 50vmax at 100% 10%,#d9eef0,transparent 60%),radial-gradient(50vmax 40vmax at 50% 110%,#f3edcf,transparent 60%)",
+   "activeNav": "linear-gradient(135deg,#2c5a43,#3f7a5c)",
+   "avatar": "linear-gradient(135deg,#bfe6cf,#d3ebef)",
+   "dotGrid": "radial-gradient(rgba(63,122,92,.2) 1px,transparent 1.3px)"
+  },
+  "contrast": {
+   "ink/bg": 14.4,
+   "muted/white": 5.2,
+   "accent/white": 5.1,
+   "white/accent": 5.1,
+   "accentDark/soft": 6.7,
+   "amberText/amberFill": 4.9,
+   "white/ink": 15.0
+  }
+ },
+ "shadow": {
+  "ring": "0 0 0 1px rgba(27,42,35,.06)",
+  "card": "0 1px 2px rgba(27,42,35,.04),0 14px 36px rgba(27,42,35,.07)",
+  "lift": "0 22px 40px -26px rgba(44,90,67,.35)",
+  "insetHighlight": "inset 0 1px 0 #fff",
+  "warningLift": "0 22px 40px -26px rgba(197,138,31,.6)",
+  "hero": "0 34px 50px -30px rgba(44,90,67,.8)",
+  "phone": "0 60px 90px -34px rgba(44,90,67,.5),0 0 0 7px rgba(255,255,255,.4)",
+  "floatCard": "0 22px 44px -16px rgba(27,42,35,.3)",
+  "buttonDark": "0 14px 30px -10px rgba(27,42,35,.55)",
+  "nav": "0 24px 44px -14px rgba(27,42,35,.45)",
+  "fab": "0 0 0 5px rgba(246,250,247,.95),0 14px 26px -6px rgba(44,90,67,.7)",
+  "recipe": "large blur, negative spread, green/ink tinted, alpha .07-.5, never grey hard shadows"
+ },
+ "glass": {
+  "background": "rgba(255,255,255,.64-.82)",
+  "blur": "10-18px",
+  "saturate": "1.4-1.6",
+  "border": "1px solid rgba(255,255,255,.9)",
+  "useOn": "aurora backgrounds only"
+ },
+ "radius": {
+  "pill": "999px",
+  "xl": "2rem",
+  "phone": "2.2rem",
+  "lg": "1.5rem",
+  "hero": "1.7rem",
+  "md": "1.3rem",
+  "float": "1.15rem",
+  "sm": ".85rem",
+  "leaf": "50% 50% 50% 12%"
+ },
+ "spacing": {
+  "scale": [
+   ".25rem",
+   ".5rem",
+   ".75rem",
+   "1rem",
+   "1.25rem",
+   "1.5rem",
+   "2rem",
+   "3rem",
+   "4rem",
+   "6rem"
+  ],
+  "sectionGap": "clamp(3.5rem,9vw,6.5rem)",
+  "gutterMobile": "1.1rem",
+  "gutterDesktop": "2rem",
+  "maxWidthMarketing": "1080px",
+  "maxWidthDashboardMobile": "900px",
+  "sidebar": "260px",
+  "rightRail": "370px",
+  "minTouch": "44px",
+  "buttonHeight": "48px",
+  "navItemHeight": "52px"
+ },
+ "breakpoints": {
+  "tiny": 380,
+  "tablet": 700,
+  "sidebar": 900,
+  "heroSplit": 960,
+  "rail": 1180
+ },
+ "typography": {
+  "fonts": {
+   "ui": "'Hanken Grotesk','Noto Sans Malayalam',system-ui,sans-serif",
+   "malayalam": "'Noto Sans Malayalam',sans-serif",
+   "wordmark": "'Newsreader',Georgia,serif (wordmark only)"
+  },
+  "weights": {
+   "hanken": [
+    400,
+    500,
+    600,
+    700
+   ],
+   "newsreader": [
+    500
+   ],
+   "notoMalayalam": [
+    400,
+    500,
+    600,
+    700
+   ]
+  },
+  "scale": {
+   "heroH1": {
+    "size": "clamp(3rem,8.4vw,5.7rem)",
+    "lh": 0.97,
+    "weight": 600,
+    "tracking": "-.052em"
+   },
+   "pageH1": {
+    "size": "clamp(1.7rem,5vw,2.5rem)",
+    "lh": 1.2,
+    "weight": 700,
+    "tracking": "-.02em"
+   },
+   "cardTitle": {
+    "size": "1.05rem",
+    "weight": 700
+   },
+   "body": {
+    "size": "1rem",
+    "lh": 1.6,
+    "weight": 400
+   },
+   "lead": {
+    "size": "1.1rem",
+    "color": "muted"
+   },
+   "kpi": {
+    "size": "1.6-2rem",
+    "weight": 600,
+    "tracking": "-.03em",
+    "numeric": "tabular-nums"
+   },
+   "small": {
+    "size": ".74-.86rem",
+    "color": "muted"
+   },
+   "eyebrow": {
+    "size": ".78rem",
+    "weight": 600,
+    "transform": "uppercase",
+    "tracking": ".12em"
+   },
+   "wordmark": {
+    "size": "1.5-1.6rem",
+    "weight": 500,
+    "tracking": "-.03em"
+   }
+  }
+ },
+ "icon": {
+  "viewBox": "0 0 24 24",
+  "style": "stroke only",
+  "strokeWidth": 1.8,
+  "cap": "round",
+  "join": "round",
+  "fill": "none",
+  "color": "currentColor",
+  "sizes": [
+   17,
+   20,
+   22,
+   26,
+   30
+  ],
+  "set": [
+   "home",
+   "chat",
+   "doc",
+   "pulse",
+   "mic",
+   "set",
+   "box",
+   "cal",
+   "check",
+   "alert",
+   "plus"
+  ],
+  "avoid": "emoji icons"
+ },
+ "motion": {
+  "easing": {
+   "signature": "cubic-bezier(.22,1,.36,1)",
+   "inOut": "cubic-bezier(.65,0,.35,1)",
+   "fly": "cubic-bezier(.76,0,.24,1)",
+   "spring": "cubic-bezier(.34,1.4,.64,1)"
+  },
+  "duration": {
+   "micro": ".15-.3s",
+   "reveal": ".45-.9s",
+   "stagger": "60-100ms",
+   "pulse": "1.6s",
+   "float": "6s",
+   "wave": "1s",
+   "halo": "14s",
+   "intro": "~2.4s"
+  },
+  "rules": [
+   "animate transform and opacity only",
+   "entrances translateY 8-26px + fade",
+   "always provide prefers-reduced-motion fallback",
+   "press state scale(.96)"
+  ]
+ },
+ "components": {
+  "buttonPrimary": {
+   "shape": "pill",
+   "height": "48px",
+   "bg": "ink",
+   "color": "#fff",
+   "shadow": "buttonDark",
+   "hover": "accentDark"
+  },
+  "buttonGhost": {
+   "shape": "pill",
+   "bg": "rgba(255,255,255,.7)",
+   "border": "line",
+   "blur": "8px"
+  },
+  "chip": {
+   "shape": "pill",
+   "height": "48px",
+   "iconWell": "1.9rem soft circle"
+  },
+  "badge": {
+   "shape": "pill",
+   "font": ".74rem 700",
+   "variants": [
+    "done: soft/accentDark",
+    "attention: amberFill/amberText"
+   ]
+  },
+  "card": {
+   "glass": true,
+   "radius": "1.5rem",
+   "padding": "1.15rem",
+   "shadow": "ring+lift+insetHighlight"
+  },
+  "kpiTile": {
+   "radius": "1.3rem",
+   "iconWell": "2.4rem soft",
+   "number": "1.9rem 600",
+   "warningVariant": "amber gradient, clickable"
+  },
+  "listItem": {
+   "iconDot": "2.4rem radius .85rem",
+   "title": "600",
+   "meta": ".85rem muted",
+   "clamp": "2 lines",
+   "divider": "line hairline"
+  },
+  "heroStatus": {
+   "bg": "gradient.heroAuto",
+   "manualBg": "gradient.heroManual",
+   "switch": "3.6x2.1rem"
+  },
+  "switch": {
+   "role": "switch",
+   "track": "3.6x2.1rem",
+   "knob": "1.56rem",
+   "easing": "spring"
+  },
+  "sidebar": {
+   "minWidth": 900,
+   "radius": "1.8rem",
+   "activeItem": "gradient.activeNav + white text"
+  },
+  "bottomNav": {
+   "maxWidth": 899,
+   "radius": "1.8rem",
+   "slots": 5,
+   "centerFab": "accent gradient with halo"
+  },
+  "bottomSheet": {
+   "radius": "2rem 2rem 0 0",
+   "bg": "#fff",
+   "backdrop": "rgba(20,34,27,.42) blur(5px)"
+  },
+  "toast": {
+   "bg": "ink",
+   "color": "#fff",
+   "shape": "pill",
+   "role": "status"
+  }
+ },
+ "patterns": {
+  "hero": "eyebrow pill > H1 (gradient 2nd line) > Malayalam tagline > lead > dark + ghost buttons > trust row; 2-col >=960",
+  "dashboard": "greeting > status hero+switch > 4 KPI tiles > needs-you > quick chips > bookings timeline > activity; right rail >=1180",
+  "intro": "mark pop > word wipe > Malayalam subtitle > fly to nav logo; no other text"
+ },
+ "rules": {
+  "do": [
+   "one accent",
+   "soft green-tinted shadows",
+   "big radii",
+   "glass over aurora",
+   "tabular numerals",
+   "44px+ targets",
+   "reduced-motion support",
+   "Malayalam-first copy",
+   "label sample data"
+  ],
+  "dont": [
+   "pure black",
+   "grey hard shadows",
+   "thin grey-bordered white cards",
+   "coloured left-border stripes",
+   "dark grey admin sidebar",
+   "Bootstrap blue/red",
+   "more than one saturated hue per screen",
+   "amber as decoration",
+   "emoji icons",
+   "fixed heights around Malayalam text",
+   "animating layout properties"
+  ]
+ }
+}

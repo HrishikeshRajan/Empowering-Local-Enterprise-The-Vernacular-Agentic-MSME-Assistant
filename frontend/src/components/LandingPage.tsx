@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { Language } from '../types';
 import { KadaIntro } from './KadaIntro';
+import AgentWorkflow from './AgentWorkflow';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -87,9 +88,18 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
   const heroRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [liveIdx, setLiveIdx] = useState(0);
+  const [liveFading, setLiveFading] = useState(false);
 
   useEffect(() => {
-    const id = setInterval(() => setLiveIdx((x) => (x + 1) % LIVE_ITEMS.length), 2800);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      const id = setInterval(() => setLiveIdx((x) => (x + 1) % LIVE_ITEMS.length), 2800);
+      return () => clearInterval(id);
+    }
+    const id = setInterval(() => {
+      setLiveFading(true);
+      setTimeout(() => { setLiveIdx((x) => (x + 1) % LIVE_ITEMS.length); setLiveFading(false); }, 260);
+    }, 2800);
     return () => clearInterval(id);
   }, []);
 
@@ -117,7 +127,7 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
   return (
     <header ref={heroRef} className={`hero${ready ? ' in' : ''}`} id="top">
       <div className="hx-copy">
-        <div className="hx-live hh" style={d(0)} aria-live="polite"><i /><span>{LIVE_ITEMS[liveIdx]}</span></div>
+        <div className="hx-live hh" style={d(0)} aria-live="polite"><i /><span className={liveFading ? 'lv out' : 'lv'}>{LIVE_ITEMS[liveIdx]}</span></div>
         <h1 className="hh" style={d(1)}>Speak.<br /><span>Kada does the rest.</span></h1>
         <p className="hx-ml hh" style={d(2)}>പറഞ്ഞാൽ മതി.</p>
         <p className="hx-lead hh" style={d(3)}>Send a voice note in Malayalam. Your shop books customers, reads bills and answers WhatsApp, day and night.</p>
@@ -152,70 +162,12 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
   const [heroReady, setHeroReady] = useState(false);
-  const activeLoopRef = useRef<gsap.core.Timeline | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ── 1. Agent Workflow Canvas Builder ── */
-    function buildCanvas() {
-      const host = document.getElementById('cvHost');
-      if (!host) return;
-
-      const wide = window.innerWidth >= 900;
-      type Layout = { w: number; h: number; nw: number; nh: number; pos: [number, number][]; ed: string[] };
-      const L: Layout = wide
-        ? { w: 1000, h: 520, nw: 160, nh: 92, pos: [[95, 260], [295, 140], [495, 260], [695, 140], [695, 390], [905, 260]], ed: ['h', 'h', 'h', 'v', 'h'] }
-        : { w: 360, h: 650, nw: 200, nh: 78, pos: [[110, 60], [250, 165], [110, 270], [250, 375], [110, 480], [250, 585]], ed: ['v', 'v', 'v', 'v', 'v'] };
-
-      const P = (d: string) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-      const IC: Record<string, string> = {
-        mic: P('<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>'),
-        txt: P('<path d="M4 7h16M4 12h10M4 17h13"/>'),
-        tgt: P('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>'),
-        chk: P('<path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"/>'),
-        loop: P('<path d="M20 8a8 8 0 0 0-14-2M4 4v4h4M4 16a8 8 0 0 0 14 2M20 20v-4h-4"/>'),
-        chat: P('<path d="M4 5h16v11H9l-5 4z"/>'),
-      };
-      const N: [string, string, string][] = [
-        ['Voice note', 'Malayalam, 0:07', 'mic'],
-        ['Speech to text', 'Whisper', 'txt'],
-        ['Intent', 'Booking, 2 guests', 'tgt'],
-        ['Do the task', 'Slots, stock, price', 'chk'],
-        ['Review and fix', 'Clash, moved to 10:30', 'loop'],
-        ['Reply sent', 'WhatsApp, owner told', 'chat'],
-      ];
-
-      let base = '', act = '';
-      L.ed.forEach((type, i) => {
-        const a = L.pos[i], b = L.pos[i + 1];
-        let d: string;
-        if (type === 'h') {
-          const x1 = a[0] + L.nw / 2, y1 = a[1], x2 = b[0] - L.nw / 2, y2 = b[1], dx = (x2 - x1) / 2;
-          d = `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
-        } else {
-          const x1 = a[0], y1 = a[1] + L.nh / 2, x2 = b[0], y2 = b[1] - L.nh / 2, dy = (y2 - y1) / 2;
-          d = `M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`;
-        }
-        base += `<path class="base" d="${d}"/>`;
-        act += `<path class="act" pathLength="1" d="${d}"/>`;
-      });
-      const retry = wide ? '<path class="retry" d="M712,344 C760,300 760,230 712,186"/><text class="rt" x="758" y="269">self-check</text>' : '';
-      const nodes = N.map(([title, sub, icon], i) => {
-        const p = L.pos[i];
-        return `<div class="nd" style="left:${((p[0] - L.nw / 2) / L.w) * 100}%;top:${((p[1] - L.nh / 2) / L.h) * 100}%;width:${(L.nw / L.w) * 100}%;height:${(L.nh / L.h) * 100}%"><span class="nic">${IC[icon]}</span><div class="nt"><b>${title}</b><small>${sub}</small></div></div>`;
-      }).join('');
-
-      host.className = `cv ${wide ? 'wide' : 'tall'}`;
-      host.style.aspectRatio = `${L.w} / ${L.h}`;
-      host.innerHTML = `<svg viewBox="0 0 ${L.w} ${L.h}" aria-hidden="true">${base}${act}${retry}<g class="pk" opacity="0"><circle r="12" fill="#3f7a5c" opacity=".2"/><circle r="5" fill="#3f7a5c"/></g></svg>${nodes}`;
-    }
-
-    buildCanvas();
-    window.addEventListener('resize', buildCanvas);
-
-    /* ── 2. Mobile Dock Visibility ── */
+    /* ── Mobile Dock Visibility ── */
     const dk = document.querySelector<HTMLElement>('.dock');
     function dockCheck() {
       dk?.classList.toggle('on', window.scrollY > window.innerHeight * 0.85);
@@ -223,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
     window.addEventListener('scroll', dockCheck, { passive: true });
     dockCheck();
 
-    /* ── 3. Dashboard Interactive Mode Switch ── */
+    /* ── Dashboard Interactive Mode Switch ── */
     const sw = document.getElementById('sw');
     const dash = document.querySelector<HTMLElement>('.dash');
     sw?.addEventListener('click', () => {
@@ -232,16 +184,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       dash?.classList.toggle('manual', on);
     });
 
-    /* ── 4. GSAP Scroll Animations ── */
+    /* ── GSAP Scroll Animations ── */
     if (reduce) {
-      const host = document.getElementById('cvHost');
-      if (host) {
-        host.querySelectorAll<HTMLElement>('.nd').forEach(el => { el.style.opacity = '1'; el.style.visibility = 'visible'; });
-      }
-      return () => {
-        window.removeEventListener('scroll', dockCheck);
-        window.removeEventListener('resize', buildCanvas);
-      };
+      return () => window.removeEventListener('scroll', dockCheck);
     }
 
     const ctx = gsap.context(() => {
@@ -279,50 +224,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       gsap.fromTo('.ob-bar b', { width: '0%' }, { width: '100%', duration: 1.6, ease: 'power2.out', scrollTrigger: st('.ob-bar', 92) });
       gsap.from('.final', { y: 40, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.final', start: 'top 92%', once: true } });
 
-      /* Agent canvas workflow loop */
-      (function initCanvasAnimation() {
-        const host = document.getElementById('cvHost');
-        if (!host) return;
-        const nds = host.querySelectorAll<HTMLElement>('.nd');
-        const acts = host.querySelectorAll<SVGPathElement>('.act');
-        const dot = host.querySelector<SVGGElement>('.pk');
-        const n = nds.length;
-        const pt = { p: 0 };
-        const stepDuration = 2.0, moveDuration = 1.45;
-
-        nds.forEach(el => { el.style.opacity = '1'; el.style.visibility = 'visible'; });
-        if (activeLoopRef.current) activeLoopRef.current.kill();
-
-        const loop = gsap.timeline({ paused: false, repeat: -1, repeatDelay: 2.0 });
-        activeLoopRef.current = loop;
-
-        function hot(idx: number) { nds.forEach((x, j) => x.classList.toggle('hot', j === idx)); }
-        loop.call(hot, [0], 0).set(dot, { opacity: 1 }, 0);
-
-        acts.forEach((path, i) => {
-          const len = path.getTotalLength(), startT = i * stepDuration;
-          loop.call(() => { const p = path.getPointAtLength(0); dot?.setAttribute('transform', `translate(${p.x} ${p.y})`); }, [], startT);
-          loop.fromTo(pt, { p: 0 }, { p: 1, duration: moveDuration, ease: 'sine.inOut', onUpdate() { const q = path.getPointAtLength(pt.p * len); dot?.setAttribute('transform', `translate(${q.x} ${q.y})`); } }, startT + 0.15);
-          loop.call(hot, [i + 1], startT + 0.15 + moveDuration);
-        });
-
-        const finalArrival = (acts.length - 1) * stepDuration + 0.15 + moveDuration;
-        loop.to(dot, { opacity: 0, duration: 0.5, ease: 'power2.out' }, finalArrival + 0.3).call(hot, [-1], finalArrival + 1.8);
-
-        const en = gsap.timeline({ scrollTrigger: { trigger: host, start: 'top 88%', once: true } });
-        nds.forEach((el, i) => {
-          en.from(el, { y: 16, scale: 0.96, duration: 0.6, ease: 'power2.out' }, i * 0.1);
-          if (acts[i]) en.fromTo(acts[i], { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'sine.out' }, i * 0.1 + 0.1);
-        });
-        const retryNodes = host.querySelectorAll('.retry, .rt');
-        if (retryNodes.length > 0) en.from(retryNodes, { autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, n * 0.1);
-
-        ScrollTrigger.create({
-          trigger: host, start: 'top bottom', end: 'bottom top',
-          onToggle(self: any) { if (self.isActive) loop.play(); else loop.pause(); },
-        });
-      })();
-
       ScrollTrigger.refresh();
     }, containerRef);
 
@@ -331,8 +232,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
     return () => {
       ctx.revert();
       window.removeEventListener('scroll', dockCheck);
-      window.removeEventListener('resize', buildCanvas);
-      if (activeLoopRef.current) activeLoopRef.current.kill();
     };
   }, [heroReady]);
 
@@ -357,16 +256,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         <HeroSection ready={heroReady} onLaunchApp={onLaunchApp} />
 
         {/* Section 2: How It Works (Agent Canvas) */}
-        <section id="how" className="agent-sec">
-          <p className="eyebrow">How it works</p>
-          <h2 className="t">An agent, not a chatbot.</h2>
-          <p className="sub">Watch one booking move through Kada. Each step runs, gets checked, and is logged for you.</p>
-          <div className="win">
-            <div className="wbar"><i /><i /><i /><span>Kada workflow</span><span className="run"><b />Running</span></div>
-            <div className="cv" id="cvHost" />
-          </div>
-          <p className="wnote">Sample booking, shown for illustration.</p>
-        </section>
+        <AgentWorkflow />
 
         {/* Section 3: Features Bento Grid */}
         <section id="features">
@@ -623,12 +513,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         .dm-wave s { width: 3px; border-radius: 2px; background: var(--accent); height: 35%; }
         .dm-wave s:nth-child(3n) { height: 90%; } .dm-wave s:nth-child(3n+1) { height: 60%; } .dm-wave s:nth-child(5n) { height: 100%; }
         .hx-replay { margin-top: auto; align-self: center; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .45rem 1rem; font: 500 .85rem 'Hanken Grotesk',sans-serif; cursor: pointer; min-height: 40px; }
-        .hx-card { position: absolute; z-index: 3; display: none; gap: .3rem; padding: .8rem .95rem; border-radius: 1.15rem; font-size: .8rem; line-height: 1.3; background: rgba(255,255,255,.64); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 22px 44px -16px rgba(27,42,35,.3); animation: hx-bob 6s ease-in-out infinite; }
+        .hx-card { position: absolute; z-index: 3; display: none; gap: .3rem; padding: .8rem .95rem; border-radius: 1.15rem; font-size: .8rem; line-height: 1.3; background: rgba(255,255,255,.64); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 22px 44px -16px rgba(27,42,35,.3); animation: hx-bob 6s ease-in-out infinite; transition: translate .4s cubic-bezier(.22,1,.36,1), opacity .35s ease; }
         @keyframes hx-bob { 50% { transform: translateY(-8px); } }
         .hx-card small { display: block; color: var(--muted); font-size: .74rem; }
         .c1 { left: -5.6rem; top: 9%; grid-auto-flow: column; align-items: center; gap: .7rem; translate: calc(var(--px,0)*-40px) calc(var(--py,0)*-24px); }
         .c2 { right: -5.2rem; top: 36%; animation-delay: -2s; translate: calc(var(--px,0)*56px) calc(var(--py,0)*-18px); }
         .c3 { left: -4.6rem; bottom: 13%; grid-auto-flow: column; align-items: center; gap: .7rem; animation-delay: -4s; translate: calc(var(--px,0)*-52px) calc(var(--py,0)*30px); }
+        .hx-stage:hover .c1 { translate: -140px -10px; opacity: .35; }
+        .hx-stage:hover .c2 { translate: 140px 0px;  opacity: .35; }
+        .hx-stage:hover .c3 { translate: -130px 10px; opacity: .35; }
         .hx-num { font: 600 1.55rem/1.1 'Hanken Grotesk',sans-serif; letter-spacing: -.03em; }
         .hx-num em { font: 600 .72rem 'Hanken Grotesk',sans-serif; font-style: normal; color: var(--accent-d); background: var(--soft); border-radius: 999px; padding: .15rem .5rem; vertical-align: middle; margin-left: .3rem; letter-spacing: 0; }
         .hx-card svg path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hx-draw 2s 1.2s ease forwards; }
@@ -637,111 +530,84 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         .hx-wv i { width: 3px; height: 100%; border-radius: 2px; background: var(--accent); animation: hx-wv 1s ease-in-out infinite; }
         @keyframes hx-wv { 50% { transform: scaleY(.3); } }
         .hx-ok { width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: .8rem; flex: none; }
+        .lv { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .25s, transform .25s; }
+        .lv.out { opacity: 0; transform: translateY(6px); }
         @media(min-width:700px) { .hx-card { display: grid; } }
         @media(min-width:960px) { .hero { grid-template-columns: 1.08fr .92fr; } .hx-stage { width: 350px; } .hx-phone { --ry: -9deg; --rx: 3deg; } }
-        @media(max-width:699px) { .hero { gap: 2.6rem; } .hero h1 { font-size: clamp(2.8rem,13.5vw,3.6rem); } .hx-screen { height: 440px; } }
+        @keyframes hxpop { from { opacity: 0; transform: translateY(14px); } }
+        @media(max-width:699px) {
+          .hero { gap: 2.2rem; padding-top: .4rem; }
+          .hero::before { -webkit-mask-image: radial-gradient(75% 38% at 50% 82%,#000,transparent 80%); mask-image: radial-gradient(75% 38% at 50% 82%,#000,transparent 80%); }
+          .hero h1 { font-size: clamp(3.1rem,15.5vw,4.3rem); line-height: .95; margin-top: 1.1rem; }
+          .hx-cta { flex-direction: column; width: 100%; gap: .7rem; }
+          .hx-cta .kb { width: 100%; }
+          .hx-trust { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; width: 100%; margin-top: 1.6rem; }
+          .hx-trust li { padding: .55rem .8rem; border-radius: .9rem; background: rgba(255,255,255,.72); border: 1px solid var(--line); font-size: .82rem; color: var(--ink); }
+          .hx-trust li::before { display: none; }
+          .hx-stage { width: 100%; margin: .2rem 0 .6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+          .hx-stage::before { inset: -8% -12%; opacity: .9; }
+          .hx-phone { grid-column: 1/-1; order: -1; padding: 0; background: none; border: 0; box-shadow: none; transform: none !important; border-radius: 1.5rem; }
+          .hx-screen { height: 370px; border-radius: 1.5rem; background: rgba(255,255,255,.72); border: 1px solid var(--line); box-shadow: 0 24px 50px -24px rgba(44,90,67,.45); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+          .hx-card { display: grid; position: static; translate: none; animation: none; font-size: .78rem; }
+          .hx-card.c1 { display: none; }
+          .hero.in .hx-card { animation: hxpop .7s .5s cubic-bezier(.22,1,.36,1) both; }
+          .hero.in .hx-card.c3 { animation-delay: .7s; }
+          .hx-num { font-size: 1.25rem; }
+          .hx-card svg { width: 104px; height: 32px; }
+        }
 
         /* Sections Common */
         section { padding: var(--gap) 0; border-top: 1px solid rgba(63,122,92,.14); position: relative; z-index: 1; }
         .t { font-size: clamp(1.9rem,4.5vw,2.8rem); max-width: 30rem; }
         .sub { color: var(--muted); max-width: 34rem; margin: 1rem 0 0; }
 
-        /* ── Section 2: Agent Workflow Window & Canvas ── */
-        .win { margin-top: 2rem; border-radius: 1.6rem; background: rgba(255,255,255,.92); border: 1px solid var(--line); box-shadow: 0 30px 70px rgba(63,122,92,.14); overflow: hidden; position: relative; }
-        .wbar { display: flex; align-items: center; gap: .45rem; padding: .7rem 1rem; border-bottom: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
-        .wbar i { width: .6rem; height: .6rem; border-radius: 50%; background: #dfe7e1; }
-        .wbar span:first-of-type { margin-left: .5rem; }
-        .run { margin-left: auto; display: flex; align-items: center; gap: .4rem; color: var(--accent-d); font-weight: 500; }
-        .run b { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); animation: hx-pulse 1.6s infinite; }
-        
-        /* Explicit styling for both .cv and #cvHost to guarantee layout integrity */
-        .cv, #cvHost {
-          position: relative !important;
-          container-type: inline-size;
-          width: 100%;
-          background: #f6faf7 radial-gradient(rgba(63,122,92,.2) 1px,transparent 1.3px) 0 0/22px 22px;
-          display: block;
-          overflow: visible;
+        /* ── Section 2: Agent Workflow (aw-* namespace) ── */
+        .aw-sec { padding: var(--gap) 0 0; }
+        .aw-rise { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1); }
+        .aw-rise.in { opacity: 1; transform: none; }
+        .aw-eyebrow { margin: 0 0 .8rem; color: var(--accent); font-weight: 600; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; }
+        .aw-title { font: 600 clamp(2.2rem,6.6vw,4rem)/1.02 'Hanken Grotesk',system-ui,sans-serif; letter-spacing: -.045em; max-width: 16ch; }
+        .aw-sub { margin: 1rem 0 0; max-width: 36rem; color: var(--muted); font-size: 1.08rem; }
+        .aw-win { margin-top: 2rem; border-radius: 1.6rem; background: rgba(255,255,255,.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 0 0 1px rgba(27,42,35,.06), 0 30px 70px rgba(63,122,92,.16), inset 0 1px 0 #fff; overflow: hidden; }
+        .aw-bar { display: flex; align-items: center; gap: .45rem; padding: .55rem .6rem .55rem 1rem; border-bottom: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
+        .aw-bar > i { width: .6rem; height: .6rem; border-radius: 50%; background: #dfe7e1; }
+        .aw-bt { margin-left: .5rem; }
+        .aw-run { margin-left: auto; display: flex; align-items: center; gap: .45rem; min-height: 40px; padding: .3rem .8rem; border-radius: 999px; color: var(--accent-d); font: 500 .82rem 'Hanken Grotesk',sans-serif; cursor: pointer; transition: background .2s; border: 0; background: none; }
+        .aw-run:hover { background: var(--soft); }
+        .aw-run:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .aw-run b { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); opacity: .45; }
+        .aw-run b.on { opacity: 1; animation: aw-pulse 1.6s infinite; }
+        @keyframes aw-pulse { 50% { transform: scale(1.7); opacity: .35; } }
+        .aw-cv { position: relative; container-type: inline-size; width: 100%; background: #f6faf7 radial-gradient(rgba(63,122,92,.2) 1px,transparent 1.3px) 0 0/22px 22px; }
+        .aw-cv > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .aw-base { fill: none; stroke: #c3d6c9; stroke-width: 2; stroke-dasharray: 3 7; stroke-linecap: round; }
+        .aw-act { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+        .aw-retry { fill: none; stroke: #c58a1f; stroke-width: 2; stroke-dasharray: 4 5; stroke-linecap: round; opacity: 0; }
+        .aw-rt { font: 500 11px 'Hanken Grotesk',sans-serif; fill: #8a5f0f; opacity: 0; }
+        .aw-nd { position: absolute; display: flex; align-items: center; gap: .6rem; padding: 0 .7rem; border-radius: 1rem; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(27,42,35,.08); opacity: 0; transition: border-color .3s, box-shadow .3s, background .3s; }
+        .aw-nd.hot { border-color: var(--accent); background: #f2faf5; box-shadow: 0 0 0 4px rgba(63,122,92,.14), 0 10px 26px rgba(63,122,92,.2); }
+        .is-seen .aw-nd { animation: aw-in .5s var(--d) cubic-bezier(.34,1.4,.64,1) both; }
+        .is-seen .aw-act { animation: aw-draw .35s var(--d) linear forwards; }
+        .is-seen .aw-retry, .is-seen .aw-rt { animation: aw-fade .6s 2.3s both; }
+        @keyframes aw-in { from { opacity: 0; transform: translateY(18px) scale(.9); } to { opacity: 1; } }
+        @keyframes aw-draw { to { stroke-dashoffset: 0; } }
+        @keyframes aw-fade { to { opacity: 1; } }
+        .aw-nic { flex: none; width: 2rem; height: 2rem; border-radius: .7rem; background: var(--soft); color: var(--accent-d); display: grid; place-items: center; }
+        .aw-nic svg { display: block; width: 18px; height: 18px; }
+        .aw-nt { min-width: 0; }
+        .aw-nt b { display: block; font-weight: 600; line-height: 1.2; }
+        .aw-nt small { display: block; color: var(--muted); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tall .aw-nt b { font-size: max(14px,4.2cqw); } .tall .aw-nt small { font-size: max(11.5px,3.3cqw); }
+        .wide .aw-nd { flex-direction: column; align-items: flex-start; justify-content: center; gap: .3rem; }
+        .wide .aw-nt { max-width: 100%; } .wide .aw-nt b { font-size: max(12.5px,1.45cqw); } .wide .aw-nt small { font-size: max(10.5px,1.15cqw); }
+        .wide .aw-nic { width: 1.7rem; height: 1.7rem; }
+        .aw-note { margin: .9rem 0 0; font-size: .85rem; color: var(--muted); text-align: center; }
+        @media (prefers-reduced-motion:reduce) {
+          .aw-rise { opacity: 1; transform: none; transition: none; }
+          .aw-nd, .aw-retry, .aw-rt { opacity: 1; animation: none !important; }
+          .aw-act { stroke-dashoffset: 0; animation: none !important; }
+          .aw-run b { animation: none; }
         }
-        .cv > svg, #cvHost > svg {
-          position: absolute !important;
-          inset: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          overflow: visible !important;
-          pointer-events: none;
-        }
-        .nic svg { display: block; width: 20px; height: 20px; }
-        .base { fill: none; stroke: #c8dcd0; stroke-width: 2.5; stroke-dasharray: 4 6; stroke-linecap: round; }
-        .act { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
-        .retry { fill: none; stroke: #d99726; stroke-width: 2.5; stroke-dasharray: 4 5; stroke-linecap: round; }
-        .rt { font-size: 12px; fill: #8a5f0f; font-family: 'Hanken Grotesk',sans-serif; font-weight: 600; }
-        .nd {
-          position: absolute !important;
-          display: flex;
-          align-items: center;
-          gap: .65rem;
-          padding: 0 .8rem;
-          border-radius: 1.1rem;
-          background: #ffffff !important;
-          border: 1.5px solid #c8dcd0 !important;
-          box-shadow: 0 8px 24px rgba(27,42,35,.12), 0 2px 6px rgba(27,42,35,.06) !important;
-          transition: border-color .45s ease, box-shadow .45s ease, background .45s ease, transform .45s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
-          box-sizing: border-box;
-          opacity: 1 !important;
-          visibility: visible !important;
-          z-index: 2;
-        }
-        .nd.hot {
-          border-color: var(--accent) !important;
-          background: #ffffff !important;
-          box-shadow: 0 0 0 4px rgba(63,122,92,.22), 0 12px 30px rgba(63,122,92,.28) !important;
-          transform: scale(1.04);
-        }
-        .nic {
-          flex: none;
-          width: 2.2rem;
-          height: 2.2rem;
-          border-radius: .7rem;
-          background: var(--soft);
-          color: var(--accent-d);
-          display: grid;
-          place-items: center;
-          transition: background .4s ease, color .4s ease;
-        }
-        .nd.hot .nic {
-          background: var(--accent);
-          color: #fff;
-        }
-        .nt { min-width: 0; }
-        .nt b {
-          display: block;
-          font-weight: 600;
-          line-height: 1.25;
-          color: #1b2a23 !important;
-          font-family: 'Hanken Grotesk',sans-serif;
-        }
-        .nt small {
-          display: block;
-          color: #436252 !important;
-          line-height: 1.3;
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-family: 'Hanken Grotesk',sans-serif;
-        }
-        
-        .tall .nd { flex-direction: row; align-items: center; }
-        .tall .nt b { font-size: max(13.5px, 3.8cqw); }
-        .tall .nt small { font-size: max(11px, 3cqw); }
-        
-        .wide .nd { flex-direction: column; align-items: flex-start; justify-content: center; gap: .35rem; padding: .75rem .9rem; }
-        .wide .nt { max-width: 100%; }
-        .wide .nt b { font-size: max(13px, 1.55cqw); }
-        .wide .nt small { font-size: max(11px, 1.25cqw); }
-        .wide .nic { width: 2rem; height: 2rem; }
-        .wnote { margin: .9rem 0 0; font-size: .85rem; color: var(--muted); text-align: center; }
 
         /* Bento Features Grid */
         .bento { display: grid; gap: 1rem; margin-top: 2.5rem; }

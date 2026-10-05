@@ -9,18 +9,20 @@ interface MobileBottomNavProps {
   onOpenVoiceModal: () => void;
 }
 
-const TABS: { id: NavTab; labelEn: string; labelMl: string; icon: string }[] = [
-  { id: 'overview',    labelEn: 'Home',     labelMl: 'ഹോം',       icon: 'i-home' },
-  { id: 'whatsapp',    labelEn: 'Inbox',    labelMl: 'ഇൻബോക്സ്', icon: 'i-chat' },
-  { id: 'invoices',    labelEn: 'Bills',    labelMl: 'ബില്ല്',     icon: 'i-doc' },
-  { id: 'voice-agent', labelEn: 'Activity', labelMl: 'ലോഗ്',      icon: 'i-pulse' },
+const LEFT:  { id: NavTab; labelEn: string; labelMl: string; icon: string }[] = [
+  { id: 'overview', labelEn: 'Home',  labelMl: 'ഹോം',       icon: 'i-home' },
+  { id: 'whatsapp', labelEn: 'Inbox', labelMl: 'ഇൻബോക്സ്', icon: 'i-chat' },
+];
+const RIGHT: { id: NavTab; labelEn: string; labelMl: string; icon: string }[] = [
+  { id: 'inventory', labelEn: 'Stock', labelMl: 'സ്റ്റോക്ക്',  icon: 'i-box' },
+  { id: 'settings',  labelEn: 'Setup', labelMl: 'ക്രമീകരണം', icon: 'i-set' },
 ];
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentTab, onTabChange, language, onOpenVoiceModal,
 }) => (
-  <nav className="knav" aria-label="Main">
-    {TABS.slice(0, 2).map(t => (
+  <nav className="knav" aria-label={language === 'ml' ? 'ബോട്ടം നാവിഗേഷൻ' : 'Bottom navigation'}>
+    {LEFT.map(t => (
       <a
         key={t.id}
         href={`#${t.id}`}
@@ -32,12 +34,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       </a>
     ))}
 
-    {/* Central FAB */}
-    <button className="fab" onClick={onOpenVoiceModal} aria-label="Speak a command">
-      <KadaIcon id="i-mic" className="i" style={{ width: 26, height: 26 }} />
+    <button className="fab" onClick={onOpenVoiceModal} aria-label={language === 'ml' ? 'വോയ്സ് കമ്മാൻഡ്' : 'Voice command'}>
+      <KadaIcon id="i-mic" className="i" />
     </button>
 
-    {TABS.slice(2).map(t => (
+    {RIGHT.map(t => (
       <a
         key={t.id}
         href={`#${t.id}`}

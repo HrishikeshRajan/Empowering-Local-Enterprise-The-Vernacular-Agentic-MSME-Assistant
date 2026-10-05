@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Language, NavTab } from '../types';
+import type { Language, NavTab, StoreProfile } from '../types';
 import { STORE_PROFILE } from '../mockData';
 
 interface HeaderProps {
@@ -8,10 +8,12 @@ interface HeaderProps {
   onLanguageChange: (lang: Language) => void;
   onOpenVoiceModal: () => void;
   onBackToLanding?: () => void;
+  storeProfile?: StoreProfile;
 }
 
-export const Header: React.FC<HeaderProps> = ({ language, onBackToLanding }) => {
-  const initials = STORE_PROFILE.owner.split(' ').map(w => w[0]).join('').slice(0, 2);
+export const Header: React.FC<HeaderProps> = ({ language, onBackToLanding, storeProfile }) => {
+  const profile = storeProfile || STORE_PROFILE;
+  const initials = (profile.owner || 'Kada').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'KD';
   return (
     <div className="top">
       <a className="logo" href="#home">
