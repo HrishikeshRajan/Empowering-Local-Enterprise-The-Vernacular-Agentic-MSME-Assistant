@@ -151,15 +151,17 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                      <span className="font-ml" style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {chat.customerName}
+                      <span className={language === 'ml' ? 'font-ml' : ''} style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {language === 'ml' ? (chat.customerNameMl || chat.customerName) : chat.customerName}
                       </span>
                       <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>
                         {chat.lastMessageTime}
                       </span>
                     </div>
                     <p style={{ fontSize: '0.75rem', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {chat.messages[chat.messages.length - 1]?.text}
+                      {language === 'ml' 
+                        ? (chat.messages[chat.messages.length - 1]?.textMl || chat.messages[chat.messages.length - 1]?.text)
+                        : (chat.messages[chat.messages.length - 1]?.text || chat.messages[chat.messages.length - 1]?.textMl)}
                     </p>
                   </div>
                   {chat.unreadCount > 0 && (
@@ -217,8 +219,8 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                 {selectedChat.customerName.charAt(0)}
               </div>
               <div>
-                <h4 className="font-ml" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>
-                  {selectedChat.customerName}
+                <h4 className={language === 'ml' ? 'font-ml' : ''} style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>
+                  {language === 'ml' ? (selectedChat.customerNameMl || selectedChat.customerName) : selectedChat.customerName}
                 </h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.72rem', color: 'var(--muted)' }}>
                   <span>{selectedChat.customerPhone}</span>
@@ -274,8 +276,8 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
                     gap: '6px'
                   }}
                 >
-                  <p className="font-ml" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
-                    {msg.text}
+                  <p className={language === 'ml' ? 'font-ml' : ''} style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    {language === 'ml' ? (msg.textMl || msg.text) : (msg.text || msg.textMl)}
                   </p>
 
                   {/* Payment Link Card if attached */}
@@ -341,25 +343,25 @@ export const WhatsAppHub: React.FC<WhatsAppHubProps> = ({ language }) => {
               Quick Templates:
             </span>
             <button
-              onClick={() => handleQuickTemplate('ഇൻവോയ്സ് MS/23-24/1156 തുക ₹38,055 അയച്ചിട്ടുണ്ട്.')}
-              className="font-ml"
+              onClick={() => handleQuickTemplate(language === 'ml' ? 'ഇൻവോയ്സ് MS/23-24/1156 തുക ₹38,055 അയച്ചിട്ടുണ്ട്.' : 'Invoice MS/23-24/1156 for ₹38,055 has been dispatched.')}
+              className={language === 'ml' ? 'font-ml' : ''}
               style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
-              📄 ബിൽ അയക്കുക
+              📄 {language === 'ml' ? 'ബിൽ അയക്കുക' : 'Send Bill'}
             </button>
             <button
-              onClick={() => handleQuickTemplate('നന്ദി! നിങ്ങളുടെ ഓർഡർ പാക്കിംഗ് പൂർത്തിയായി വരുന്നു.')}
-              className="font-ml"
+              onClick={() => handleQuickTemplate(language === 'ml' ? 'നന്ദി! നിങ്ങളുടെ ഓർഡർ പാക്കിംഗ് പൂർത്തിയായി വരുന്നു.' : 'Thank you! Your order is currently being packed.')}
+              className={language === 'ml' ? 'font-ml' : ''}
               style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
-              📦 ഓർഡർ സ്ഥിരീകരണം
+              📦 {language === 'ml' ? 'ഓർഡർ സ്ഥിരീകരണം' : 'Confirm Order'}
             </button>
             <button
-              onClick={() => handleQuickTemplate('ദയവായി തുക താഴെ കാണുന്ന UPI ലിങ്ക് വഴി നൽകുമല്ലോ.')}
-              className="font-ml"
+              onClick={() => handleQuickTemplate(language === 'ml' ? 'ദയവായി തുക താഴെ കാണുന്ന UPI ലിങ്ക് വഴി നൽകുമല്ലോ.' : 'Kindly settle the payment using the UPI link below.')}
+              className={language === 'ml' ? 'font-ml' : ''}
               style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--soft)', color: 'var(--accent-d)', border: '1px solid rgba(63, 122, 92, 0.2)', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             >
-              💳 UPI പേയ്മെന്റ് ലിങ്ക്
+              💳 {language === 'ml' ? 'UPI പേയ്മെന്റ് ലിങ്ക്' : 'UPI Link'}
             </button>
           </div>
 

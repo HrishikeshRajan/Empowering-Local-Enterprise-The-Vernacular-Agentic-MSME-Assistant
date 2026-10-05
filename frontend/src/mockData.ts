@@ -310,7 +310,8 @@ export const MOCK_INVOICE_DATA: InvoiceData = {
 export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
   {
     id: 'conv-1',
-    customerName: 'Kailas Provisions (ചാലക്കുടി)',
+    customerName: 'Kailas Provisions (Chalakudy)',
+    customerNameMl: 'കൈലാസ് പ്രൊവിഷൻസ് (ചാലക്കുടി)',
     customerPhone: '+91 98462 88123',
     location: 'Chalakudy, Thrissur',
     unreadCount: 0,
@@ -321,14 +322,14 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-1',
         sender: 'customer',
-        text: 'സുരേഷേ, ഇന്നത്തെ ഫ്രഷ് ഗ്രീൻ ഏലക്കായുടെ വില കിലോയ്ക്ക് എത്രയാണ്?',
+        text: 'Hi Suresh, what is the rate for fresh Green Cardamom per kg today?',
         textMl: 'സുരേഷേ, ഇന്നത്തെ ഫ്രഷ് ഗ്രീൻ ഏലക്കായുടെ വില കിലോയ്ക്ക് എത്രയാണ്?',
         time: '10:30 AM'
       },
       {
         id: 'm-2',
         sender: 'agent',
-        text: 'നമസ്കാരം കൈലാസ്! ഇന്നത്തെ എ ഗ്രേഡ് ഗ്രീൻ ഏലക്കായുടെ വില കിലോയ്ക്ക് ₹1,450 ആണ്. ഞങ്ങളുടെ കൈവശം നിലവിൽ 8 കിലോ ഫ്രഷ് സ്റ്റോക്ക് ലഭ്യമാണ്. എത്ര അളവ് മാറ്റി വെക്കണം?',
+        text: "Hello Kailas! Today's Grade-A Green Cardamom is ₹1,450/kg. We currently have 8 kg fresh stock available. How much should I reserve for you?",
         textMl: 'നമസ്കാരം കൈലാസ്! ഇന്നത്തെ എ ഗ്രേഡ് ഗ്രീൻ ഏലക്കായുടെ വില കിലോയ്ക്ക് ₹1,450 ആണ്. ഞങ്ങളുടെ കൈവശം നിലവിൽ 8 കിലോ ഫ്രഷ് സ്റ്റോക്ക് ലഭ്യമാണ്. എത്ര അളവ് മാറ്റി വെക്കണം?',
         time: '10:30 AM',
         status: 'read'
@@ -336,14 +337,14 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-3',
         sender: 'customer',
-        text: 'ശരി, എന്നാൽ 8 കിലോയും എനിക്ക് വേണം. ബിൽ ഇങ്ങോട്ട് അയക്കൂ.',
+        text: 'Great, please pack all 8 kg for me. Kindly send the invoice here.',
         textMl: 'ശരി, എന്നാൽ 8 കിലോയും എനിക്ക് വേണം. ബിൽ ഇങ്ങോട്ട് അയക്കൂ.',
         time: '10:35 AM'
       },
       {
         id: 'm-4',
         sender: 'agent',
-        text: 'ബില്ലും തുകയും തയ്യാറാക്കി കഴിഞ്ഞു! ഇൻവോയ്സ് MS/23-24/1156 പ്രകാരം ആകെ തുക ₹38,055 (നികുതി സഹിതം). താഴെ കാണുന്ന ലിങ്കിൽ ക്ലിക്ക് ചെയ്ത് UPI വഴി പണമടയ്ക്കാം.',
+        text: 'Your bill and payment details are ready! As per Tax Invoice MS/23-24/1156, the total amount is ₹38,055 (including 18% GST). Tap the link below to pay instantly via UPI.',
         textMl: 'ബില്ലും തുകയും തയ്യാറാക്കി കഴിഞ്ഞു! ഇൻവോയ്സ് MS/23-24/1156 പ്രകാരം ആകെ തുക ₹38,055 (നികുതി സഹിതം). താഴെ കാണുന്ന ലിങ്കിൽ ക്ലിക്ക് ചെയ്ത് UPI വഴി പണമടയ്ക്കാം.',
         time: '10:36 AM',
         status: 'read',
@@ -353,7 +354,7 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-5',
         sender: 'customer',
-        text: 'പണം അയച്ചു, സ്ക്രീൻഷോട്ട് നോക്കൂ.',
+        text: 'Payment completed, please verify the screenshot.',
         textMl: 'പണം അയച്ചു, സ്ക്രീൻഷോട്ട് നോക്കൂ.',
         time: '10:48 AM'
       }
@@ -361,7 +362,8 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
   },
   {
     id: 'conv-2',
-    customerName: 'Dr. Anjali (ആയുർവേദ ക്ലിനിക്ക്)',
+    customerName: 'Dr. Anjali (Ayurvedic Clinic)',
+    customerNameMl: 'ഡോ. അഞ്ജലി (ആയുർവേദ ക്ലിനിക്ക്)',
     customerPhone: '+91 97455 33211',
     location: 'Swaraj Round, Thrissur',
     unreadCount: 1,
@@ -372,14 +374,14 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-201',
         sender: 'customer',
-        text: 'നാളെ ഉച്ചയ്ക്ക് 2 മണിക്ക് 10 ലിറ്റർ വെളിച്ചെണ്ണയും 5 കിലോ കുരുമുളകും റെഡിയാക്കി വെക്കാമോ?',
+        text: 'Can you please keep 10 liters of pure coconut oil and 5 kg black pepper ready tomorrow at 2:00 PM?',
         textMl: 'നാളെ ഉച്ചയ്ക്ക് 2 മണിക്ക് 10 ലിറ്റർ വെളിച്ചെണ്ണയും 5 കിലോ കുരുമുളകും റെഡിയാക്കി വെക്കാമോ?',
         time: '09:18 AM'
       },
       {
         id: 'm-202',
         sender: 'agent',
-        text: 'തീർച്ചയായും ഡോക്ടർ! നാളെ ഉച്ചയ്ക്ക് 2 മണിക്ക് 10L ശുദ്ധമായ വെളിച്ചെണ്ണയും 5kg വയനാടൻ കുരുമുളകും പാക്ക് ചെയ്തു വെക്കാം. ബുക്കിംഗ് സ്ഥിരീകരിച്ചു.',
+        text: 'Certainly, Doctor! We will have 10L cold-pressed coconut oil and 5kg Wayanad black pepper packed and ready tomorrow at 2:00 PM. Booking confirmed.',
         textMl: 'തീർച്ചയായും ഡോക്ടർ! നാളെ ഉച്ചയ്ക്ക് 2 മണിക്ക് 10L ശുദ്ധമായ വെളിച്ചെണ്ണയും 5kg വയനാടൻ കുരുമുളകും പാക്ക് ചെയ്തു വെക്കാം. ബുക്കിംഗ് സ്ഥിരീകരിച്ചു.',
         time: '09:20 AM',
         status: 'read'
@@ -388,7 +390,8 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
   },
   {
     id: 'conv-3',
-    customerName: 'Raghavan Pillai (റീട്ടെയിൽ കസ്റ്റമർ)',
+    customerName: 'Raghavan Pillai (Retail Customer)',
+    customerNameMl: 'രാഘവൻ പിള്ള (റീട്ടെയിൽ കസ്റ്റമർ)',
     customerPhone: '+91 94460 77192',
     location: 'Ollur, Thrissur',
     unreadCount: 0,
@@ -399,7 +402,7 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-301',
         sender: 'agent',
-        text: 'പ്രിയ രാഘവേട്ടാ, മലബാർ സ്റ്റോഴ്സിൽ നിന്നുള്ള ഓർമ്മപ്പെടുത്തൽ: കഴിഞ്ഞ മാസത്തെ പലചരക്ക് ബില്ലിലെ ബാക്കി തുക ₹1,250 ദയവായി സൗകര്യപ്പെടുമ്പോൾ നേരിട്ടോ UPI വഴിയോ നൽകുമല്ലോ.',
+        text: 'Dear Raghavan sir, friendly reminder from Malabar Provisions: Your pending grocery bill of ₹1,250 from last month can be cleared at the store or via UPI at your convenience.',
         textMl: 'പ്രിയ രാഘവേട്ടാ, മലബാർ സ്റ്റോഴ്സിൽ നിന്നുള്ള ഓർമ്മപ്പെടുത്തൽ: കഴിഞ്ഞ മാസത്തെ പലചരക്ക് ബില്ലിലെ ബാക്കി തുക ₹1,250 ദയവായി സൗകര്യപ്പെടുമ്പോൾ നേരിട്ടോ UPI വഴിയോ നൽകുമല്ലോ.',
         time: 'Yesterday 05:12 PM',
         status: 'read',
@@ -409,7 +412,7 @@ export const MOCK_WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'm-302',
         sender: 'customer',
-        text: 'ശരി സുരേഷേ, നാളെ രാവിലെ കടയിൽ വന്ന് തന്നേക്കാം.',
+        text: "Sure Suresh, I'll stop by the shop tomorrow morning and settle it.",
         textMl: 'ശരി സുരേഷേ, നാളെ രാവിലെ കടയിൽ വന്ന് തന്നേക്കാം.',
         time: 'Yesterday 06:05 PM'
       }

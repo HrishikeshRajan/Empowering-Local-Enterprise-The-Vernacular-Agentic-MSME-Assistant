@@ -285,8 +285,8 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
               <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase' }}>Vendor</span>
               <span style={{ fontSize: '0.72rem', color: 'var(--accent-d)', fontWeight: 600 }}>Confidence: 99.4%</span>
             </div>
-            <p className="font-ml" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)' }}>
-              {invoice.vendorName} ({invoice.vendorNameMl})
+            <p className={language === 'ml' ? 'font-ml' : ''} style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)' }}>
+              {language === 'ml' ? `${invoice.vendorNameMl} (${invoice.vendorName})` : invoice.vendorName}
             </p>
             <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '2px' }}>
               GSTIN: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-d)', fontWeight: 600 }}>{invoice.vendorGstin}</span> • {invoice.vendorAddress}
@@ -303,7 +303,7 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--muted)' }}>
-                    <th style={{ padding: '6px 8px' }}>Item (മലയാളം)</th>
+                    <th style={{ padding: '6px 8px' }}>{language === 'ml' ? 'ഉൽപ്പന്നം (മലയാളം)' : 'Item Description'}</th>
                     <th style={{ padding: '6px 8px' }}>HSN</th>
                     <th style={{ padding: '6px 8px' }}>Qty</th>
                     <th style={{ padding: '6px 8px' }}>Rate</th>
@@ -314,8 +314,11 @@ export const InvoiceParser: React.FC<InvoiceParserProps> = ({ language }) => {
                   {invoice.items.map((item) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid var(--line)' }}>
                       <td style={{ padding: '8px' }}>
-                        <p className="font-ml" style={{ fontWeight: 600, color: 'var(--ink)' }}>
-                          {item.nameMl}
+                        <p className={language === 'ml' ? 'font-ml' : ''} style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                          {language === 'ml' ? item.nameMl : item.name}
+                        </p>
+                        <p style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+                          {language === 'ml' ? item.name : item.nameMl}
                         </p>
                       </td>
                       <td style={{ padding: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--muted)' }}>

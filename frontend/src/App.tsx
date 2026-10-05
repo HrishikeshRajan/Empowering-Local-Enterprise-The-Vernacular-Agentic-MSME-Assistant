@@ -4,6 +4,7 @@ import './styles/dashboard.css';
 import { STORE_PROFILE } from './mockData';
 import { getStoreSettings, updateStoreProfile } from './api/client';
 import { LandingPage } from './components/LandingPage';
+import { LoginModal } from './components/LoginModal';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -17,6 +18,21 @@ import { StoreSettings } from './components/StoreSettings';
 import { VoiceModal } from './components/VoiceModal';
 import { KadaIconSprite } from './components/ui';
 
+interface AuthSession {
+  phone: string;
+  authenticated: boolean;
+  token?: string;
+  loginTime?: string;
+}
+
+function getStoredAuth(): AuthSession | null {
+  try {
+    const raw = localStorage.getItem('kada_auth_session');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
 function isDashboardRoute(): boolean {
   if (typeof window === 'undefined') return false;
   const path = window.location.pathname.toLowerCase();
@@ -25,9 +41,29 @@ function isDashboardRoute(): boolean {
 }
 
 export function App() {
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => getStoredAuth());
   const [viewMode, setViewMode] = useState<'landing' | 'app'>(() => isDashboardRoute() ? 'app' : 'landing');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<NavTab>('overview');
-  const [language, setLanguage] = useState<Language>('ml');
+  const [language, setLanguage] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('kada_language');
+      if (saved === 'en') return 'en';
+      if (saved === 'ml') {
+        // User requested replace Malayalam with English as default
+        localStorage.setItem('kada_language', 'en');
+        return 'en';
+      }
+    } catch {}
+    return 'en';
+  });
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    try {
+      localStorage.setItem('kada_language', lang);
+    } catch {}
+  };
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [storeProfile, setStoreProfile] = useState<StoreProfile>(() => {
     try {
@@ -77,7 +113,9 @@ export function App() {
     };
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handlePopState);
-    if (isDashboardRoute()) document.documentElement.classList.remove('kada-lock');
+    if (isDashboardRoute()) {
+      document.documentElement.classList.remove('kada-lock');
+    }
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('hashchange', handlePopState);
@@ -85,11 +123,63 @@ export function App() {
   }, []);
 
   const handleLaunchApp = () => {
+    if (!authSession?.authenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
     if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
       window.history.pushState({}, '', '/dashboard');
     }
     document.documentElement.classList.remove('kada-lock');
     setViewMode('app');
+  };
+
+  const handleOpenLogin = () => {
+    setIsLoginModalOpen(true);
+  };
+
+  const handleLoginSuccess = (rawPhone: string) => {
+    const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
+    const formattedPhone = `+91 ${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}`;
+    const session: AuthSession = {
+      phone: formattedPhone,
+      authenticated: true,
+      token: `kada_jwt_${Date.now()}`,
+      loginTime: new Date().toISOString()
+    };
+    setAuthSession(session);
+    setStoreProfile(prev => ({ ...prev, phone: formattedPhone }));
+    try {
+      localStorage.setItem('kada_auth_session', JSON.stringify(session));
+      const savedProfile = localStorage.getItem('kada_store_profile');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        localStorage.setItem('kada_store_profile', JSON.stringify({ ...parsed, phone: formattedPhone }));
+      }
+    } catch {}
+    setIsLoginModalOpen(false);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+      window.history.pushState({}, '', '/dashboard');
+    }
+    document.documentElement.classList.remove('kada-lock');
+    setViewMode('app');
+  };
+
+  const handleQuickTry = () => {
+    setIsLoginModalOpen(false);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+      window.history.pushState({}, '', '/dashboard');
+    }
+    document.documentElement.classList.remove('kada-lock');
+    setViewMode('app');
+  };
+
+  const handleLogout = () => {
+    setAuthSession(null);
+    try {
+      localStorage.removeItem('kada_auth_session');
+    } catch {}
+    handleBackToLanding();
   };
 
   const handleBackToLanding = () => {
@@ -110,15 +200,22 @@ export function App() {
         <KadaIconSprite />
         <LandingPage
           language={language}
-          onLanguageChange={setLanguage}
+          onLanguageChange={handleLanguageChange}
           onLaunchApp={handleLaunchApp}
           onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
+          onOpenLogin={handleOpenLogin}
         />
         <VoiceModal
           isOpen={isVoiceModalOpen}
           onClose={() => setIsVoiceModalOpen(false)}
           language={language}
           onSelectCommand={handleVoiceCommandSelected}
+        />
+        <LoginModal
+          open={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={handleLoginSuccess}
+          onQuickTry={handleQuickTry}
         />
       </>
     );
@@ -135,6 +232,8 @@ export function App() {
           language={language}
           onBackToLanding={handleBackToLanding}
           storeProfile={storeProfile}
+          onLogout={handleLogout}
+          onLanguageChange={handleLanguageChange}
         />
 
         {/* Main column */}
@@ -143,7 +242,7 @@ export function App() {
           <Header
             currentTab={currentTab}
             language={language}
-            onLanguageChange={setLanguage}
+            onLanguageChange={handleLanguageChange}
             onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
             onBackToLanding={handleBackToLanding}
             storeProfile={storeProfile}
@@ -190,6 +289,14 @@ export function App() {
         onClose={() => setIsVoiceModalOpen(false)}
         language={language}
         onSelectCommand={handleVoiceCommandSelected}
+      />
+
+      {/* Login modal */}
+      <LoginModal
+        open={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+        onQuickTry={handleQuickTry}
       />
     </>
   );

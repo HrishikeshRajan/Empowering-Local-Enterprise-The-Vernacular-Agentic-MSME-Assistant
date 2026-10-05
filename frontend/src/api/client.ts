@@ -233,3 +233,31 @@ export async function getSystemHealth(): Promise<SystemHealthStatus> {
     memoryUsageMb: 85.4
   });
 }
+
+// --- Auth & OTP APIs ---
+export async function sendOtp(phone: string): Promise<{ success: boolean; message: string; phone: string; demoOtp?: string }> {
+  return safeFetch<{ success: boolean; message: string; phone: string; demoOtp?: string }>('/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone })
+  }, {
+    success: true,
+    message: `Verification code sent to ${phone} via WhatsApp / SMS`,
+    phone,
+    demoOtp: '123456'
+  });
+}
+
+export async function verifyOtp(phone: string, otp: string): Promise<{ success: boolean; token: string; profile: StoreProfile; message?: string }> {
+  return safeFetch<{ success: boolean; token: string; profile: StoreProfile; message?: string }>('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone, otp })
+  }, {
+    success: true,
+    token: `kada_offline_token_${Date.now()}`,
+    profile: {
+      ...STORE_PROFILE,
+      phone
+    },
+    message: 'Authenticated successfully'
+  });
+}

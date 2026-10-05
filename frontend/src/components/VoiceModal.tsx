@@ -31,7 +31,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
     setTranscript('');
     const preset = MOCK_VOICE_PRESETS[Math.floor(Math.random() * MOCK_VOICE_PRESETS.length)];
     timers.current.push(
-      setTimeout(() => setTranscript(preset.malayalamAudioText), 1300),
+      setTimeout(() => setTranscript(language === 'ml' ? preset.malayalamAudioText : preset.englishTranslation), 1300),
       setTimeout(() => setPhase('done'), 2800),
     );
   };
@@ -65,16 +65,16 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
           >
             <KadaIcon id="i-mic" className="i" style={{ width: 32, height: 32 }} />
           </button>
-          <span className="ml" style={{ color: 'var(--muted)' }}>
+          <span className={language === 'ml' ? 'ml' : ''} style={{ color: 'var(--muted)' }}>
             {language === 'ml'
               ? 'ടാപ്പ് ചെയ്ത് മലയാളത്തിൽ പറയൂ'
-              : 'Tap and speak in Malayalam'}
+              : 'Tap to speak a voice command'}
           </span>
         </div>
       )}
 
       {/* Transcript */}
-      <div className={`ktx ml${transcript ? '' : ''}`}>
+      <div className={`ktx ${language === 'ml' ? 'ml' : ''}`}>
         {transcript || (phase === 'listening' ? '…' : '')}
       </div>
 
@@ -92,9 +92,14 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
               ghost
               small
               style={{ justifyContent: 'flex-start', textAlign: 'left' }}
-              onClick={() => { setTranscript(p.malayalamAudioText); setPhase('done'); }}
+              onClick={() => { 
+                setTranscript(language === 'ml' ? p.malayalamAudioText : p.englishTranslation); 
+                setPhase('done'); 
+              }}
             >
-              <span className="ml">{p.malayalamAudioText}</span>
+              <span className={language === 'ml' ? 'ml' : ''}>
+                {language === 'ml' ? p.malayalamAudioText : p.englishTranslation}
+              </span>
             </KadaButton>
           ))}
         </div>

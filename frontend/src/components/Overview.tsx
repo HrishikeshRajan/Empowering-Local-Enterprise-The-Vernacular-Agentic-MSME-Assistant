@@ -15,17 +15,19 @@ const t = (en: string, ml: string, lang: Language) => lang === 'ml' ? ml : en;
 export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, onOpenVoiceModal, storeProfile }) => {
   const profile = storeProfile || STORE_PROFILE;
   const [autoMode, setAutoMode] = useState(true);
-  const [attItems, setAttItems] = useState([
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const attentionDefs = [
     { id: 'a1', icon: 'i-alert', title: t('Bulk order from Rahul',  'രാഹുലിൽ നിന്ന് ബൾക്ക് ഓർഡർ', lang), sub: t('40 uniforms by the 15th · 10:42', '40 യൂണിഫോം 15 ന് · 10:42', lang), action: t('Reply', 'മറുപടി', lang) },
     { id: 'a2', icon: 'i-box',   title: t('Rice stock is low',      'അരി സ്റ്റോക്ക് കുറഞ്ഞു',     lang), sub: t('20 kg left, reorder drafted · 09:05', '20 കി.ഗ്രാം ബാക്കി, ഓർഡർ തയ്യാർ · 09:05', lang), action: t('Order', 'ഓർഡർ ചെയ്യൂ', lang) },
-  ]);
+  ];
+  const attItems = attentionDefs.filter(i => !dismissedIds.includes(i.id));
 
   const recent = INITIAL_AGENT_LOGS.filter(l => l.status === 'SUCCESS').slice(0, 3);
 
   const dismiss = (id: string) => {
     const el = document.getElementById(`att-item-${id}`);
     if (el) el.classList.add('out');
-    setTimeout(() => setAttItems(prev => prev.filter(i => i.id !== id)), 300);
+    setTimeout(() => setDismissedIds(prev => [...prev, id]), 300);
   };
 
   const agentLabel = autoMode

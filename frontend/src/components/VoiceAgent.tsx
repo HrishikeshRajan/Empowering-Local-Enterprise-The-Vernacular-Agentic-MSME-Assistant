@@ -320,11 +320,11 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                       ⏱ {preset.duration}
                     </span>
                   </div>
-                  <p className="font-ml" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4 }}>
-                    "{preset.malayalamAudioText}"
+                  <p className={language === 'ml' ? 'font-ml' : ''} style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.4 }}>
+                    "{language === 'ml' ? preset.malayalamAudioText : preset.englishTranslation}"
                   </p>
                   <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '2px' }}>
-                    {preset.englishTranslation}
+                    {language === 'ml' ? preset.englishTranslation : preset.malayalamAudioText}
                   </p>
                 </div>
                 <div style={{ 
@@ -617,7 +617,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--muted)' }}>
                 <th style={{ padding: '10px 14px' }}>Task ID</th>
-                <th style={{ padding: '10px 14px' }}>Input Command (Malayalam)</th>
+                <th style={{ padding: '10px 14px' }}>{language === 'ml' ? 'ശബ്ദ നിർദ്ദേശം (മലയാളം)' : 'Voice Command'}</th>
                 <th style={{ padding: '10px 14px' }}>Tool Used</th>
                 <th style={{ padding: '10px 14px' }}>Confidence</th>
                 <th style={{ padding: '10px 14px' }}>Latency</th>
@@ -640,11 +640,11 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     #{log.id}
                   </td>
                   <td style={{ padding: '12px 14px', maxWidth: '300px' }}>
-                    <p className="font-ml" style={{ fontWeight: 600, color: 'var(--ink)' }}>
-                      {log.inputPromptMl || log.inputPrompt}
+                    <p className={language === 'ml' ? 'font-ml' : ''} style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                      {language === 'ml' ? (log.inputPromptMl || log.inputPrompt) : (log.inputPrompt || log.inputPromptMl)}
                     </p>
                     <p style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
-                      {log.inputPrompt}
+                      {language === 'ml' ? log.inputPrompt : (log.inputPromptMl || '')}
                     </p>
                   </td>
                   <td style={{ padding: '12px 14px' }}>

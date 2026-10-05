@@ -12,6 +12,7 @@ import { inventoryRouter } from './inventory/inventoryRouter.js';
 import { appointmentsRouter } from './appointments/appointmentsRouter.js';
 import { settingsRouter } from './settings/settingsRouter.js';
 import { healthRouter } from './health/healthRouter.js';
+import { authRouter } from './auth/authRouter.js';
 
 dotenv.config();
 
@@ -104,6 +105,7 @@ app.use('/api/inventory',    inventoryRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/settings',     settingsRouter);
 app.use('/api/health',       healthRouter);
+app.use('/api/auth',         authRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

@@ -12,12 +12,13 @@ interface LandingPageProps {
   onLanguageChange: (lang: Language) => void;
   onLaunchApp: () => void;
   onOpenVoiceModal: () => void;
+  onOpenLogin?: () => void;
 }
 
 // ─── Hero: Demo phone scenes ─────────────────────────────────────────────────
 type SceneItem = [string, string | [string, string][]];
 const SCENES: SceneItem[][] = [
-  [['in', 'voice'], ['in ml', 'നാളെ രാവിലെ 10 മണിക്ക് 2 പേർക്ക് ഫിറ്റിംഗ് വേണം'],
+  [['in', 'voice'], ['in', 'Need fitting for 2 people tomorrow morning at 10 AM'],
    ['code', '{ "intent": "booking",\n  "time": "tomorrow 10:00",\n  "guests": 2 }'], ['out', 'Booked for tomorrow, 10:00 ✓']],
   [['in', 'Photo: supplier receipt'],
    ['bill', [['Rice 50 kg', '₹2,400'], ['Sugar 25 kg', '₹1,100'], ['Oil 10 L', '₹1,320']]],
@@ -129,8 +130,7 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
       <div className="hx-copy">
         <div className="hx-live hh" style={d(0)} aria-live="polite"><i /><span className={liveFading ? 'lv out' : 'lv'}>{LIVE_ITEMS[liveIdx]}</span></div>
         <h1 className="hh" style={d(1)}>Speak.<br /><span>Kada does the rest.</span></h1>
-        <p className="hx-ml hh" style={d(2)}>പറഞ്ഞാൽ മതി.</p>
-        <p className="hx-lead hh" style={d(3)}>Send a voice note in Malayalam. Your shop books customers, reads bills and answers WhatsApp, day and night.</p>
+        <p className="hx-lead hh" style={d(2)}>Just say it in English or Malayalam. Your shop books customers, reads bills and answers WhatsApp, day and night.</p>
         <div className="hx-cta hh" style={d(4)}>
           <button className="kb kb-dark" data-testid="cta-hero" onClick={onLaunchApp}>
             Start free setup
@@ -146,7 +146,7 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
       <div ref={stageRef} className="hx-stage hh" style={d(3)}>
         <div className="hx-card c1">
           <div className="hx-wv">{[0, 120, 240, 60, 180].map((x) => <i key={x} style={{ animationDelay: x + 'ms' }} />)}</div>
-          <div><b className="ml">ഇന്ന് എത്ര വിറ്റു?</b><small>Voice note · 0:04</small></div>
+          <div><b>How much sold today?</b><small>Voice note · 0:04</small></div>
         </div>
         <div className="hx-card c2">
           <small>Today's sales</small>
@@ -160,7 +160,7 @@ function HeroSection({ ready, onLaunchApp }: { ready: boolean; onLaunchApp: () =
   );
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLogin }) => {
   const [heroReady, setHeroReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -248,8 +248,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <a href="#how">How it works</a>
             <a href="#features">Features</a>
             <a href="/dashboard" onClick={(e) => { e.preventDefault(); onLaunchApp(); }}>Dashboard</a>
+            <a 
+              href="#login" 
+              onClick={(e) => { e.preventDefault(); onOpenLogin ? onOpenLogin() : onLaunchApp(); }}
+              style={{ fontWeight: 600, color: 'var(--accent-d)' }}
+            >
+              Sign In (OTP)
+            </a>
           </div>
-          <button className="kb kb-ghost" data-testid="cta-nav" onClick={onLaunchApp}>Get early access</button>
+          <button className="kb kb-ghost" data-testid="cta-nav" onClick={onOpenLogin || onLaunchApp}>Get early access</button>
         </nav>
 
         {/* Hero Section */}

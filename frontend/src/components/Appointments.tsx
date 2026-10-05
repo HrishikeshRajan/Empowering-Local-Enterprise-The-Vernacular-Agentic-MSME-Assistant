@@ -119,9 +119,9 @@ export const Appointments: React.FC<AppointmentsProps> = ({ language }) => {
                 style={{ width: '100%', marginTop: 'auto', fontSize: '0.8rem', padding: '8px' }}
               >
                 <CheckCircle2 size={14} />
-                <span className="font-ml">
+                <span className={language === 'ml' ? 'font-ml' : ''}>
                   {confirmedId === apt.id 
-                    ? 'സ്ഥിരീകരിക്കുന്നു...' 
+                    ? (language === 'ml' ? 'സ്ഥിരീകരിക്കുന്നു...' : 'Confirming...') 
                     : (language === 'ml' ? 'WhatsApp വഴി സ്ഥിരീകരിക്കുക' : 'Confirm & Notify WhatsApp')}
                 </span>
               </button>

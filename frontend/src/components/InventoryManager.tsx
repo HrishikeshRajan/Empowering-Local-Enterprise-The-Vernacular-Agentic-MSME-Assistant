@@ -156,11 +156,11 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
                   <span className="glass-badge glass-badge-indigo" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>
                     {language === 'ml' ? item.categoryMl : item.category}
                   </span>
-                  <h3 className="font-ml" style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>
-                    {item.nameMl}
+                  <h3 className={language === 'ml' ? 'font-ml' : ''} style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>
+                    {language === 'ml' ? item.nameMl : item.name}
                   </h3>
                   <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
-                    {item.name}
+                    {language === 'ml' ? item.name : item.nameMl}
                   </p>
                 </div>
 

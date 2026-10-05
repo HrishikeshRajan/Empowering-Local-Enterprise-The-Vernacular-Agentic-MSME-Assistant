@@ -90,6 +90,7 @@ export interface WhatsAppMessage {
 export interface WhatsAppConversation {
   id: string;
   customerName: string;
+  customerNameMl?: string;
   customerPhone: string;
   location: string;
   unreadCount: number;
