@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Language, NavTab, StoreProfile } from './types';
 import './styles/dashboard.css';
 import { STORE_PROFILE } from './mockData';
-import { getStoreSettings, updateStoreProfile } from './api/client';
+import { getStoreSettings, updateStoreProfile, getAuthToken, clearAuthToken } from './api/client';
 import { LandingPage } from './components/LandingPage';
 import { LoginModal } from './components/LoginModal';
 import { Header } from './components/Header';
@@ -79,9 +79,9 @@ export function App() {
         setStoreProfile(prev => {
           try {
             const saved = localStorage.getItem('kada_store_profile');
-            if (saved) return { ...res.profile, ...JSON.parse(saved) };
+            if (saved) return JSON.parse(saved);
           } catch {}
-          return res.profile;
+          return prev;
         });
       }
     }).catch(console.warn);
@@ -138,24 +138,54 @@ export function App() {
     setIsLoginModalOpen(true);
   };
 
-  const handleLoginSuccess = (rawPhone: string) => {
+  const handleLoginSuccess = (rawPhone: string, authData?: any) => {
     const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
     const formattedPhone = `+91 ${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}`;
+    const token = authData?.token || getAuthToken() || `kada_jwt_${Date.now()}`;
     const session: AuthSession = {
       phone: formattedPhone,
       authenticated: true,
-      token: `kada_jwt_${Date.now()}`,
+      token,
       loginTime: new Date().toISOString()
     };
     setAuthSession(session);
-    setStoreProfile(prev => ({ ...prev, phone: formattedPhone }));
+
+    const isDemo = formattedPhone === '+91 94471 23456';
+    const profileFromBackend = authData?.profile;
+
+    let finalProfile: StoreProfile;
+    if (profileFromBackend && profileFromBackend.name) {
+      finalProfile = {
+        ...profileFromBackend,
+        phone: formattedPhone
+      };
+    } else if (isDemo) {
+      finalProfile = {
+        ...STORE_PROFILE,
+        phone: formattedPhone
+      };
+    } else {
+      // Registered as a brand-new user (not Suresh)
+      finalProfile = {
+        name: 'New Enterprise',
+        nameMl: 'പുതിയ കട',
+        owner: `Merchant (${cleanDigits})`,
+        ownerMl: 'വ്യാപാരി',
+        location: 'Kerala, India',
+        gstin: '',
+        phone: formattedPhone,
+        monthlyRevenue: 0,
+        cashInHand: 0,
+        pendingInvoices: 0,
+        whatsappQueriesToday: 0,
+        tasksAutoCompleted: 100
+      };
+    }
+
+    setStoreProfile(finalProfile);
     try {
       localStorage.setItem('kada_auth_session', JSON.stringify(session));
-      const savedProfile = localStorage.getItem('kada_store_profile');
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        localStorage.setItem('kada_store_profile', JSON.stringify({ ...parsed, phone: formattedPhone }));
-      }
+      localStorage.setItem('kada_store_profile', JSON.stringify(finalProfile));
     } catch {}
     setIsLoginModalOpen(false);
     if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
@@ -176,9 +206,12 @@ export function App() {
 
   const handleLogout = () => {
     setAuthSession(null);
+    clearAuthToken();
     try {
       localStorage.removeItem('kada_auth_session');
+      localStorage.removeItem('kada_store_profile');
     } catch {}
+    setStoreProfile(STORE_PROFILE);
     handleBackToLanding();
   };
 

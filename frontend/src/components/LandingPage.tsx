@@ -443,10 +443,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
           --shadow: 0 1px 2px rgba(27,42,35,.04),0 14px 36px rgba(27,42,35,.07);
           --gap: clamp(3.5rem,9vw,6.5rem);
         }
-        body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.05rem/1.65 'Hanken Grotesk',system-ui,sans-serif; overflow-x: hidden; }
+        body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.05rem/1.65 'Plus Jakarta Sans',system-ui,sans-serif; overflow-x: hidden; }
         html.kada-lock, html.kada-lock body { overflow: hidden; height: 100%; }
-        h1, h2, h3 { margin: 0; letter-spacing: -.015em; }
-        h2, h3 { font-family: 'Newsreader','Noto Sans Malayalam',Georgia,serif; font-weight: 500; line-height: 1.1; }
+        h1, h2, h3 { margin: 0; letter-spacing: -.025em; font-family: 'Outfit','Plus Jakarta Sans',sans-serif; }
+        h2, h3 { font-family: 'Outfit','Plus Jakarta Sans',sans-serif; font-weight: 700; line-height: 1.15; }
         .ml { font-family: 'Noto Sans Malayalam',sans-serif; }
         a { color: inherit; }
         .landing-root { min-height: 100vh; background: radial-gradient(60vmax 60vmax at 5% 0,#d4eedf,transparent 60%),radial-gradient(55vmax 55vmax at 100% 20%,#d9eef0,transparent 60%),var(--bg); }
@@ -464,7 +464,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
 
         /* ── Nav ── */
         .kada-nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 0; position: relative; z-index: 1; }
-        .logo { font: 500 1.6rem 'Newsreader',serif; text-decoration: none; display: flex; gap: .55rem; align-items: center; color: var(--ink); }
+        .logo { font: 700 1.6rem 'Outfit',sans-serif; letter-spacing: -.03em; text-decoration: none; display: flex; gap: .55rem; align-items: center; color: var(--ink); }
         .logo i { width: 1.1rem; height: 1.1rem; border-radius: 50% 50% 50% 12%; background: var(--accent); }
         .links { display: none; gap: 1.8rem; font-size: .95rem; color: var(--muted); }
         .links a { text-decoration: none; }
@@ -473,7 +473,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         html.kada-lock .kada-nav > :not(.logo) { opacity: 0; }
 
         /* ── Buttons ── */
-        .kb { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 48px; padding: .8rem 1.6rem; border-radius: 999px; border: 1px solid var(--accent); font: 500 1rem 'Hanken Grotesk',sans-serif; text-decoration: none; cursor: pointer; transition: background .25s; }
+        .kb { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 48px; padding: .8rem 1.6rem; border-radius: 999px; border: 1px solid var(--accent); font: 600 1rem 'Plus Jakarta Sans',sans-serif; text-decoration: none; cursor: pointer; transition: background .25s; }
         .kb-dark { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 14px 30px -10px rgba(27,42,35,.55); }
         .kb-dark:hover { background: var(--accent-d); border-color: var(--accent-d); }
         .kb-ghost { background: rgba(255,255,255,.7); color: var(--ink); border-color: var(--line); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -502,7 +502,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .hx-phone { width: 100%; border-radius: 2.2rem; padding: .55rem; background: linear-gradient(160deg,#fff,#e8f2eb); border: 1px solid rgba(255,255,255,.95); box-shadow: 0 60px 90px -34px rgba(44,90,67,.5),0 0 0 7px rgba(255,255,255,.4); transform: perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition: transform .35s ease-out; }
         .hx-screen { border-radius: 1.7rem; background: var(--tint); height: 480px; overflow: hidden; padding: .9rem; display: flex; flex-direction: column; gap: .6rem; }
         .hx-tabs { display: flex; gap: .2rem; background: var(--surface); padding: .25rem; border-radius: 999px; border: 1px solid var(--line); }
-        .hx-tab { flex: 1; border: 0; background: none; min-height: 40px; padding: .45rem .2rem; border-radius: 999px; font: 500 .82rem 'Hanken Grotesk',sans-serif; color: var(--muted); cursor: pointer; transition: background .25s,color .25s; }
+        .hx-tab { flex: 1; border: 0; background: none; min-height: 40px; padding: .45rem .2rem; border-radius: 999px; font: 600 .82rem 'Plus Jakarta Sans',sans-serif; color: var(--muted); cursor: pointer; transition: background .25s,color .25s; }
         .hx-tab[aria-selected="true"] { background: var(--soft); color: var(--accent-d); }
         .hx-scene { display: flex; flex-direction: column; gap: .55rem; flex: 1; overflow: hidden; }
         .dm { max-width: 88%; padding: .6rem .85rem; border-radius: 1rem; font-size: .93rem; line-height: 1.5; }
@@ -519,7 +519,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .dm-wave { display: flex; gap: 3px; align-items: center; height: 22px; }
         .dm-wave s { width: 3px; border-radius: 2px; background: var(--accent); height: 35%; }
         .dm-wave s:nth-child(3n) { height: 90%; } .dm-wave s:nth-child(3n+1) { height: 60%; } .dm-wave s:nth-child(5n) { height: 100%; }
-        .hx-replay { margin-top: auto; align-self: center; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .45rem 1rem; font: 500 .85rem 'Hanken Grotesk',sans-serif; cursor: pointer; min-height: 40px; }
+        .hx-replay { margin-top: auto; align-self: center; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .45rem 1rem; font: 600 .85rem 'Plus Jakarta Sans',sans-serif; cursor: pointer; min-height: 40px; }
         .hx-card { position: absolute; z-index: 3; display: none; gap: .3rem; padding: .8rem .95rem; border-radius: 1.15rem; font-size: .8rem; line-height: 1.3; background: rgba(255,255,255,.64); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 22px 44px -16px rgba(27,42,35,.3); animation: hx-bob 6s ease-in-out infinite; transition: translate .4s cubic-bezier(.22,1,.36,1), opacity .35s ease; }
         @keyframes hx-bob { 50% { transform: translateY(-8px); } }
         .hx-card small { display: block; color: var(--muted); font-size: .74rem; }
@@ -529,8 +529,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .hx-stage:hover .c1 { translate: -140px -10px; opacity: .35; }
         .hx-stage:hover .c2 { translate: 140px 0px;  opacity: .35; }
         .hx-stage:hover .c3 { translate: -130px 10px; opacity: .35; }
-        .hx-num { font: 600 1.55rem/1.1 'Hanken Grotesk',sans-serif; letter-spacing: -.03em; }
-        .hx-num em { font: 600 .72rem 'Hanken Grotesk',sans-serif; font-style: normal; color: var(--accent-d); background: var(--soft); border-radius: 999px; padding: .15rem .5rem; vertical-align: middle; margin-left: .3rem; letter-spacing: 0; }
+        .hx-num { font: 700 1.6rem/1.1 'Outfit',sans-serif; letter-spacing: -.03em; }
+        .hx-num em { font: 700 .72rem 'Plus Jakarta Sans',sans-serif; font-style: normal; color: var(--accent-d); background: var(--soft); border-radius: 999px; padding: .15rem .5rem; vertical-align: middle; margin-left: .3rem; letter-spacing: 0; }
         .hx-card svg path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hx-draw 2s 1.2s ease forwards; }
         @keyframes hx-draw { to { stroke-dashoffset: 0; } }
         .hx-wv { display: flex; align-items: center; gap: 3px; height: 26px; }
@@ -573,13 +573,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .aw-rise { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1); }
         .aw-rise.in { opacity: 1; transform: none; }
         .aw-eyebrow { margin: 0 0 .8rem; color: var(--accent); font-weight: 600; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; }
-        .aw-title { font: 600 clamp(2.2rem,6.6vw,4rem)/1.02 'Hanken Grotesk',system-ui,sans-serif; letter-spacing: -.045em; max-width: 16ch; }
+        .aw-title { font: 800 clamp(2.2rem,6.6vw,4rem)/1.02 'Outfit','Plus Jakarta Sans',sans-serif; letter-spacing: -.045em; max-width: 16ch; }
         .aw-sub { margin: 1rem 0 0; max-width: 36rem; color: var(--muted); font-size: 1.08rem; }
         .aw-win { margin-top: 2rem; border-radius: 1.6rem; background: rgba(255,255,255,.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 0 0 1px rgba(27,42,35,.06), 0 30px 70px rgba(63,122,92,.16), inset 0 1px 0 #fff; overflow: hidden; }
         .aw-bar { display: flex; align-items: center; gap: .45rem; padding: .55rem .6rem .55rem 1rem; border-bottom: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
         .aw-bar > i { width: .6rem; height: .6rem; border-radius: 50%; background: #dfe7e1; }
         .aw-bt { margin-left: .5rem; }
-        .aw-run { margin-left: auto; display: flex; align-items: center; gap: .45rem; min-height: 40px; padding: .3rem .8rem; border-radius: 999px; color: var(--accent-d); font: 500 .82rem 'Hanken Grotesk',sans-serif; cursor: pointer; transition: background .2s; border: 0; background: none; }
+        .aw-run { margin-left: auto; display: flex; align-items: center; gap: .45rem; min-height: 40px; padding: .3rem .8rem; border-radius: 999px; color: var(--accent-d); font: 600 .82rem 'Plus Jakarta Sans',sans-serif; cursor: pointer; transition: background .2s; border: 0; background: none; }
         .aw-run:hover { background: var(--soft); }
         .aw-run:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .aw-run b { width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); opacity: .45; }
@@ -590,7 +590,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .aw-base { fill: none; stroke: #c3d6c9; stroke-width: 2; stroke-dasharray: 3 7; stroke-linecap: round; }
         .aw-act { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
         .aw-retry { fill: none; stroke: #c58a1f; stroke-width: 2; stroke-dasharray: 4 5; stroke-linecap: round; opacity: 0; }
-        .aw-rt { font: 500 11px 'Hanken Grotesk',sans-serif; fill: #8a5f0f; opacity: 0; }
+        .aw-rt { font: 600 11px 'Plus Jakarta Sans',sans-serif; fill: #8a5f0f; opacity: 0; }
         .aw-nd { position: absolute; display: flex; align-items: center; gap: .6rem; padding: 0 .7rem; border-radius: 1rem; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(27,42,35,.08); opacity: 0; transition: border-color .3s, box-shadow .3s, background .3s; }
         .aw-nd.hot { border-color: var(--accent); background: #f2faf5; box-shadow: 0 0 0 4px rgba(63,122,92,.14), 0 10px 26px rgba(63,122,92,.2); }
         .is-seen .aw-nd { animation: aw-in .5s var(--d) cubic-bezier(.34,1.4,.64,1) both; }
@@ -649,7 +649,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .ticks li::before { content: "\\2713"; position: absolute; left: 0; top: .1rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--soft); color: var(--accent-d); font-size: .72rem; display: grid; place-items: center; }
         .dash { padding: 1.2rem; border-radius: 1.5rem; background: rgba(255,255,255,.92); border: 1px solid var(--line); box-shadow: 0 30px 70px rgba(63,122,92,.16); min-width: 0; }
         .dh { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-        .dh b { display: block; font: 500 1.3rem 'Newsreader',serif; }
+        .dh b { display: block; font: 700 1.3rem 'Outfit',sans-serif; letter-spacing: -.02em; }
         .dh small { color: var(--muted); font-size: .82rem; }
         .swt { position: relative; flex: none; width: 3.4rem; height: 2rem; border-radius: 999px; border: 0; background: var(--line); cursor: pointer; transition: background .3s; }
         .swt[aria-checked="true"] { background: var(--accent); }
@@ -664,7 +664,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onOpenLog
         .dash.manual .mode { background: #f6ecd3; color: #8a5f0f; }
         .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; }
         .tiles div { padding: .7rem .3rem; border-radius: .9rem; background: var(--tint); text-align: center; font-size: .75rem; color: var(--muted); }
-        .tiles b { display: block; font: 500 1.5rem 'Newsreader',serif; color: var(--ink); }
+        .tiles b { display: block; font: 700 1.55rem 'Outfit',sans-serif; letter-spacing: -.03em; color: var(--ink); }
         .feed { margin-top: .9rem; display: grid; gap: .1rem; }
         .row { display: flex; align-items: center; gap: .7rem; padding: .65rem .2rem; border-top: 1px solid var(--line); font-size: .9rem; }
         .row span:nth-child(2) { flex: 1; min-width: 0; }

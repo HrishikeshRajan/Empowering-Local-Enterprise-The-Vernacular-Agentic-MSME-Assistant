@@ -26,13 +26,46 @@ import {
 // In prod: set VITE_API_URL=https://your-backend.com in .env
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
+const TOKEN_STORAGE_KEY = 'kada_auth_token';
+
+export function getAuthToken(): string | null {
+  try {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY) || localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string): void {
+  try {
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } catch (err) {
+    console.warn('[Auth Storage] Could not store token:', err);
+  }
+}
+
+export function clearAuthToken(): void {
+  try {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem('kada_auth_session');
+  } catch (err) {
+    console.warn('[Auth Storage] Could not clear token:', err);
+  }
+}
+
 async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {
+    const token = getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options?.headers as Record<string, string> || {})
+    };
+
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {})
-      },
+      headers,
       ...options
     });
     if (!res.ok) {
@@ -248,7 +281,7 @@ export async function sendOtp(phone: string): Promise<{ success: boolean; messag
 }
 
 export async function verifyOtp(phone: string, otp: string): Promise<{ success: boolean; token: string; profile: StoreProfile; message?: string }> {
-  return safeFetch<{ success: boolean; token: string; profile: StoreProfile; message?: string }>('/auth/verify-otp', {
+  const res = await safeFetch<{ success: boolean; token: string; profile: StoreProfile; message?: string }>('/auth/verify-otp', {
     method: 'POST',
     body: JSON.stringify({ phone, otp })
   }, {
@@ -260,4 +293,9 @@ export async function verifyOtp(phone: string, otp: string): Promise<{ success: 
     },
     message: 'Authenticated successfully'
   });
+
+  if (res?.token) {
+    setAuthToken(res.token);
+  }
+  return res;
 }

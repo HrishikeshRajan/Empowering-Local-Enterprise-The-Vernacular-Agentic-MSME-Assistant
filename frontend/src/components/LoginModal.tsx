@@ -14,9 +14,9 @@ const defaultSend = async (phone: string) => {
 const defaultVerify = async (phone: string, code: string) => {
   try {
     const res = await apiVerifyOtp(phone, code);
-    return !!res?.success;
+    return res;
   } catch {
-    return code === "123456" || code === "1234";
+    return (code === "123456" || code === "1234") ? { success: true } : { success: false };
   }
 };
 
@@ -42,10 +42,10 @@ const BACK = "M15 5l-7 7 7 7";
 export interface LoginModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess?: (phone: string) => void;
+  onSuccess?: (phone: string, authData?: any) => void;
   onQuickTry?: () => void;
   sendOtp?: (phone: string) => Promise<any>;
-  verifyOtp?: (phone: string, code: string) => Promise<boolean>;
+  verifyOtp?: (phone: string, code: string) => Promise<any>;
 }
 
 /**
@@ -170,11 +170,28 @@ export function LoginModal({
 
   const verify = useCallback(async (value: string) => {
     setBusy(true); setError("");
+    let result: any = null;
     let ok = false;
-    try { ok = await verifyOtp(digits, value); } catch { ok = false; }
+    try {
+      result = await verifyOtp(digits, value);
+      ok = typeof result === 'boolean' ? result : !!result?.success;
+    } catch {
+      ok = false;
+    }
     setBusy(false);
-    if (ok) { setStep("done"); setTimeout(() => { onSuccess?.(digits); onClose?.(); }, 1100); }
-    else { setError("That code didn't match. Please try again."); setShake(true); setCode(""); setTimeout(() => setShake(false), 450); setTimeout(() => codeIn.current?.focus(), 50); }
+    if (ok) {
+      setStep("done");
+      setTimeout(() => {
+        onSuccess?.(digits, result);
+        onClose?.();
+      }, 1100);
+    } else {
+      setError("That code didn't match. Please try again.");
+      setShake(true);
+      setCode("");
+      setTimeout(() => setShake(false), 450);
+      setTimeout(() => codeIn.current?.focus(), 50);
+    }
   }, [digits, verifyOtp, onSuccess, onClose]);
 
   const onCode = (v: string) => {
