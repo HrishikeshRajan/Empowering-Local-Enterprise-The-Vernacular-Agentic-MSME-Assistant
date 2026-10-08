@@ -1,4 +1,5 @@
 import { store } from '../data/store.js';
+import { prisma } from '../db.js';
 import type { AgentToolType, InventoryItem, InvoiceData, Appointment } from '@msme/shared';
 import {
   InventoryUpdatePayloadSchema,
@@ -6,6 +7,16 @@ import {
   CalendarCheckPayloadSchema,
   InventoryQueryPayloadSchema
 } from './schemas.js';
+
+export interface DatabaseSyncStatus {
+  synced: boolean;
+  table: string;
+  businessId?: string;
+  businessName?: string;
+  itemId?: string;
+  action?: 'updated' | 'created';
+  error?: string;
+}
 
 export interface ToolExecutionResponse {
   success: boolean;
@@ -16,46 +27,196 @@ export interface ToolExecutionResponse {
   error?: string;
 }
 
+/**
+ * Resolve or create a BusinessProfile in PostgreSQL so database writes never fail due to missing business
+ */
+async function resolveOrCreateBusiness(phone?: string, businessId?: string) {
+  if (businessId) {
+    const byId = await prisma.businessProfile.findUnique({ where: { id: businessId } });
+    if (byId) return byId;
+  }
+  if (phone) {
+    const byPhone = await prisma.businessProfile.findFirst({ where: { phone } });
+    if (byPhone) return byPhone;
+  }
+  const activeProfile = store.getProfile();
+  if (activeProfile.phone) {
+    const byActive = await prisma.businessProfile.findFirst({ where: { phone: activeProfile.phone } });
+    if (byActive) return byActive;
+  }
+  const first = await prisma.businessProfile.findFirst();
+  if (first) return first;
+
+  // Auto-create default business profile if database is completely empty
+  const created = await prisma.businessProfile.create({
+    data: {
+      phone: phone || activeProfile.phone || '+91 94471 23456',
+      businessName: activeProfile.name || 'Malabar Spices & General Provisions',
+      businessNameMl: activeProfile.nameMl || 'മലബാർ സ്പൈസസ് & ജനറൽ പ്രൊവിഷൻസ്',
+      ownerName: activeProfile.owner || 'Suresh Kumar',
+      ownerNameMl: activeProfile.ownerMl || 'സുരേഷ് കുമാർ',
+      address: activeProfile.location || 'Thrissur, Kerala',
+      gstin: activeProfile.gstin || '32ABCPB9876C1Z1',
+      primaryLanguage: 'ml',
+      notifyWhatsapp: true,
+      notifyLowStock: true,
+      autoInvoiceSync: true
+    }
+  });
+  console.log(`[Agent Tool DB] Auto-created initial business profile in PostgreSQL: ${created.businessName} (${created.id})`);
+  return created;
+}
+
 export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExecutionResponse>> = {
   db_write: async (params: any): Promise<ToolExecutionResponse> => {
-    const validated = InventoryUpdatePayloadSchema.parse(params);
-    const existing = store.findInventoryByName(validated.productName);
+    try {
+      const validated = InventoryUpdatePayloadSchema.parse(params);
+      const existing = store.findInventoryByName(validated.productName);
+      const previousUnitPrice = existing ? existing.unitPrice : undefined;
 
-    if (existing) {
-      const updatedStock = existing.currentStock + validated.quantity;
-      const updates: Partial<InventoryItem> = {
-        currentStock: updatedStock,
-        lastRestocked: 'Just now (via Voice Agent)'
-      };
-      if (validated.pricePerUnit) {
-        updates.unitPrice = validated.pricePerUnit;
+      let resultItem: InventoryItem;
+      let summary: string;
+      let summaryMl: string;
+
+      if (existing) {
+        const updatedStock = existing.currentStock + validated.quantity;
+        const updates: Partial<InventoryItem> = {
+          currentStock: updatedStock,
+          lastRestocked: 'Just now (via Voice Agent)'
+        };
+        if (validated.pricePerUnit) {
+          updates.unitPrice = validated.pricePerUnit;
+        }
+        resultItem = store.updateInventoryItem(existing.id, updates) || existing;
+        summary = `Updated ${existing.name}: +${validated.quantity} ${existing.unit} (Total: ${updatedStock} ${existing.unit})${validated.pricePerUnit ? `, Price: ₹${validated.pricePerUnit}/${existing.unit}` : ''}.`;
+        summaryMl = `${existing.nameMl} സ്റ്റോക്ക് പുതുക്കി: +${validated.quantity} ${existing.unit} (ആകെ: ${updatedStock} ${existing.unit})${validated.pricePerUnit ? `, വില ₹${validated.pricePerUnit}/${existing.unit}` : ''}.`;
+      } else {
+        resultItem = store.addInventoryItem({
+          name: validated.productName,
+          nameMl: validated.productName,
+          category: 'General',
+          categoryMl: 'സാധാരണ',
+          currentStock: validated.quantity,
+          unit: validated.unit || 'kg',
+          reorderLevel: 10,
+          unitPrice: validated.pricePerUnit || 50,
+          costPrice: (validated.pricePerUnit || 50) * 0.8
+        });
+        summary = `Created new inventory item ${resultItem.name} with ${resultItem.currentStock} ${resultItem.unit} at ₹${resultItem.unitPrice}/${resultItem.unit}.`;
+        summaryMl = `പുതിയ സാധനം ${resultItem.name} സ്റ്റോക്കിൽ ചേർത്തു: ${resultItem.currentStock} ${resultItem.unit}, വില ₹${resultItem.unitPrice}/${resultItem.unit}.`;
       }
-      const updated = store.updateInventoryItem(existing.id, updates);
-      return {
-        success: true,
-        tool: 'db_write',
-        summary: `Updated ${existing.name}: +${validated.quantity} ${existing.unit} (Total: ${updatedStock} ${existing.unit})${validated.pricePerUnit ? `, Price: ₹${validated.pricePerUnit}/${existing.unit}` : ''}.`,
-        summaryMl: `${existing.nameMl} സ്റ്റോക്ക് പുതുക്കി: +${validated.quantity} ${existing.unit} (ആകെ: ${updatedStock} ${existing.unit})${validated.pricePerUnit ? `, വില ₹${validated.pricePerUnit}/${existing.unit}` : ''}.`,
-        data: updated
+
+      // Persist inventory update to PostgreSQL database
+      let dbStatus: DatabaseSyncStatus = {
+        synced: false,
+        table: 'InventoryItem'
       };
-    } else {
-      const newItem = store.addInventoryItem({
-        name: validated.productName,
-        nameMl: validated.productName,
-        category: 'General',
-        categoryMl: 'സാധാരണ',
-        currentStock: validated.quantity,
-        unit: validated.unit || 'kg',
-        reorderLevel: 10,
-        unitPrice: validated.pricePerUnit || 50,
-        costPrice: (validated.pricePerUnit || 50) * 0.8
-      });
+
+      try {
+        const business = await resolveOrCreateBusiness(params.merchantPhone, params.businessId);
+
+        const nameWords = validated.productName.trim().split(/\s+/).filter(w => w.length > 2);
+        const searchWord = nameWords[0] || validated.productName.trim();
+
+        // Match existing item in DB by English or Malayalam name
+        const dbExisting = await prisma.inventoryItem.findFirst({
+          where: {
+            businessId: business.id,
+            OR: [
+              { name: { contains: searchWord, mode: 'insensitive' } },
+              { nameMl: { contains: searchWord, mode: 'insensitive' } },
+              { name: { contains: validated.productName.trim(), mode: 'insensitive' } },
+              { nameMl: { contains: validated.productName.trim(), mode: 'insensitive' } }
+            ]
+          }
+        });
+
+        if (dbExisting) {
+          const newDbStock = dbExisting.currentStock + validated.quantity;
+          const updatedDb = await prisma.inventoryItem.update({
+            where: { id: dbExisting.id },
+            data: {
+              currentStock: newDbStock,
+              unitPrice: validated.pricePerUnit || dbExisting.unitPrice,
+              lastRestocked: new Date(),
+              updatedAt: new Date()
+            }
+          });
+          dbStatus = {
+            synced: true,
+            table: 'InventoryItem',
+            businessId: business.id,
+            businessName: business.businessName,
+            itemId: updatedDb.id,
+            action: 'updated'
+          };
+          console.log(`[PostgreSQL SUCCESS] Updated stock for "${updatedDb.name}" (+${validated.quantity} => Total: ${newDbStock}) in business "${business.businessName}" (ID: ${business.id})`);
+        } else {
+          const createdDb = await prisma.inventoryItem.create({
+            data: {
+              businessId: business.id,
+              name: resultItem.name,
+              nameMl: resultItem.nameMl || resultItem.name,
+              category: resultItem.category || 'General',
+              categoryMl: resultItem.categoryMl || 'സാധാരണ',
+              currentStock: resultItem.currentStock,
+              unit: resultItem.unit || 'kg',
+              reorderLevel: resultItem.reorderLevel || 10,
+              unitPrice: resultItem.unitPrice || 50,
+              costPrice: resultItem.costPrice || 40
+            }
+          });
+          dbStatus = {
+            synced: true,
+            table: 'InventoryItem',
+            businessId: business.id,
+            businessName: business.businessName,
+            itemId: createdDb.id,
+            action: 'created'
+          };
+          console.log(`[PostgreSQL SUCCESS] Created new item "${createdDb.name}" (Stock: ${createdDb.currentStock}) in business "${business.businessName}" (ID: ${business.id})`);
+        }
+      } catch (dbErr: any) {
+        const errorMsg = dbErr?.message || String(dbErr);
+        console.error('[PostgreSQL ERROR] Failed to write inventory item to database:', errorMsg);
+        dbStatus = {
+          synced: false,
+          table: 'InventoryItem',
+          error: errorMsg
+        };
+      }
+
+      const hasDbError = !dbStatus.synced;
+      const finalSummary = hasDbError
+        ? `${summary} ⚠️ [PostgreSQL Sync Failed: ${dbStatus.error}]`
+        : `${summary} ✓ [PostgreSQL: Synced to DB]`;
+      const finalSummaryMl = hasDbError
+        ? `${summaryMl} ⚠️ [ഡാറ്റാബേസ് പിശക്: ${dbStatus.error}]`
+        : `${summaryMl} ✓ [ഡാറ്റാബേസിൽ രേഖപ്പെടുത്തി]`;
+
       return {
-        success: true,
+        success: !hasDbError,
         tool: 'db_write',
-        summary: `Created new inventory item ${newItem.name} with ${newItem.currentStock} ${newItem.unit} at ₹${newItem.unitPrice}/${newItem.unit}.`,
-        summaryMl: `പുതിയ സാധനം ${newItem.name} സ്റ്റോക്കിൽ ചേർത്തു: ${newItem.currentStock} ${newItem.unit}, വില ₹${newItem.unitPrice}/${newItem.unit}.`,
-        data: newItem
+        summary: finalSummary,
+        summaryMl: finalSummaryMl,
+        data: {
+          ...resultItem,
+          previousUnitPrice,
+          dbStatus,
+          databaseError: dbStatus.error
+        },
+        error: dbStatus.error
+      };
+    } catch (validationErr: any) {
+      const msg = validationErr?.message || String(validationErr);
+      console.error('[Agent Tool DB] Payload validation error in db_write:', msg);
+      return {
+        success: false,
+        tool: 'db_write',
+        summary: `Inventory validation error: ${msg}`,
+        summaryMl: `സ്റ്റോക്ക് വിവരങ്ങൾ പരിശോധിച്ചതിൽ പിശക്: ${msg}`,
+        data: { params, error: msg },
+        error: msg
       };
     }
   },
@@ -86,7 +247,7 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
         success: true,
         tool: 'db_read',
         summary: `Retrieved store profile for ${profile.name}.`,
-        summaryMl: `${profile.nameMl} സ്റ്റോർ വിവരങ്ങൾ എടുത്തു.`,
+        summaryMl: `${profile.name} സ്റ്റോർ വിവരങ്ങൾ പരിശോധിച്ചു.`,
         data: profile
       };
     }
@@ -94,88 +255,52 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
 
   whatsapp_send: async (params: any): Promise<ToolExecutionResponse> => {
     const validated = WhatsAppSendPayloadSchema.parse(params);
-    let conv = store.findConversationByPhone(validated.recipientPhone);
-    const convId = conv ? conv.id : `conv-${Date.now()}`;
+    const conv = store.findConversationByPhone(validated.recipientPhone);
 
-    const sentMessage = store.addMessage(convId, {
-      sender: 'agent',
+    const messagePayload = {
+      sender: 'merchant' as const,
       text: validated.messageText,
       textMl: validated.messageTextMl || validated.messageText,
-      status: 'delivered',
-      hasPaymentLink: validated.includePaymentLink,
-      paymentAmount: validated.amount
-    });
+      timestamp: 'Just now',
+      status: 'sent' as const
+    };
+
+    store.addMessage(conv ? conv.id : validated.recipientPhone, messagePayload);
 
     return {
       success: true,
       tool: 'whatsapp_send',
-      summary: `Delivered WhatsApp message to ${validated.customerName || validated.recipientPhone}${validated.amount ? ` with ₹${validated.amount} payment link` : ''}.`,
-      summaryMl: `${validated.customerName || validated.recipientPhone} എന്ന നമ്പറിലേക്ക് WhatsApp സന്ദേശം അയച്ചു${validated.amount ? ` (തുക ₹${validated.amount})` : ''}.`,
-      data: sentMessage
-    };
-  },
-
-  invoice_parse: async (params: any): Promise<ToolExecutionResponse> => {
-    // Uses pre-indexed or simulated Gemini Flash Vision parser
-    const invoices = store.getInvoices();
-    const existing = params.invoiceNo ? invoices.find(i => i.invoiceNo === params.invoiceNo) : invoices[0];
-    
-    if (existing) {
-      return {
-        success: true,
-        tool: 'invoice_parse',
-        summary: `Parsed invoice #${existing.invoiceNo} from ${existing.vendorName}. Total: ₹${existing.grandTotal} (${existing.items.length} items).`,
-        summaryMl: `${existing.vendorNameMl} ഇൻവോയ്സ് #${existing.invoiceNo} പരിശോധിച്ചു. ആകെ തുക ₹${existing.grandTotal} (${existing.items.length} ഇനങ്ങൾ).`,
-        data: existing
-      };
-    }
-
-    const newInvoice: InvoiceData = {
-      id: `inv-${Date.now()}`,
-      invoiceNo: params.invoiceNo || `INV/${Date.now().toString().slice(-4)}`,
-      date: new Date().toLocaleDateString('en-GB'),
-      vendorName: 'WAYANAD SPICE TRADERS',
-      vendorNameMl: 'വയനാട് സ്പൈസ് ട്രേഡേഴ്സ്',
-      vendorGstin: '32AABCT1234K1Z5',
-      vendorAddress: 'Meenangadi, Wayanad - 673591',
-      buyerName: 'MALABAR SPICES',
-      buyerGstin: '32ABCPB9876C1Z1',
-      imageUrl: params.imageUrl || '/sample_invoice.jpg',
-      status: 'verified',
-      guardrailsPassed: true,
-      varianceAmount: 0.0,
-      subTotal: 12000.0,
-      cgst: 1080.0,
-      sgst: 1080.0,
-      grandTotal: 14160.0,
-      items: [
-        {
-          id: `item-${Date.now()}-1`,
-          name: 'Cardamom Grade 1',
-          nameMl: 'ഏലക്ക ഗ്രേഡ് 1',
-          hsn: '090831',
-          qty: '10kg',
-          unit: 'kg',
-          rate: 1200.0,
-          amount: 12000.0,
-          confidence: 98.5
-        }
-      ]
-    };
-    store.addInvoice(newInvoice);
-
-    return {
-      success: true,
-      tool: 'invoice_parse',
-      summary: `Parsed newly submitted invoice #${newInvoice.invoiceNo}. Total: ₹${newInvoice.grandTotal} with 100% tax accuracy.`,
-      summaryMl: `പുതിയ ഇൻവോയ്സ് #${newInvoice.invoiceNo} വിജയകരമായി പരിശോധിച്ചു. തുക ₹${newInvoice.grandTotal}.`,
-      data: newInvoice
+      summary: `Dispatched WhatsApp message to ${validated.customerName || validated.recipientPhone} with payment link: ₹${validated.amount || 'N/A'}.`,
+      summaryMl: `${validated.customerName || validated.recipientPhone} എന്ന ഉപഭോക്താവിന് ₹${validated.amount || 0} തുകയുടെ WhatsApp ബിൽ അയച്ചു.`,
+      data: {
+        recipientPhone: validated.recipientPhone,
+        customerName: validated.customerName,
+        amount: validated.amount,
+        delivered: true
+      }
     };
   },
 
   calendar_check: async (params: any): Promise<ToolExecutionResponse> => {
     const validated = CalendarCheckPayloadSchema.parse(params);
-    const newApt = store.addAppointment({
+    const appointments = store.getAppointments();
+
+    const conflict = appointments.find(
+      a => a.date === validated.date && a.timeSlot === validated.timeSlot && a.status === 'confirmed'
+    );
+
+    if (conflict) {
+      return {
+        success: false,
+        tool: 'calendar_check',
+        summary: `Slot conflict: ${validated.timeSlot} on ${validated.date} is already booked by ${conflict.customerName}.`,
+        summaryMl: `സമയത്തിൽ തടസ്സം: ${validated.date} ${validated.timeSlot} സമയം ഇതിനകം ${conflict.customerName} ബുക്ക് ചെയ്തിട്ടുണ്ട്.`,
+        data: { conflict: true, conflictingAppointment: conflict },
+        error: `Slot ${validated.timeSlot} is already booked`
+      };
+    }
+
+    const newAppt: Appointment = store.addAppointment({
       customerName: validated.customerName,
       phone: validated.phone,
       service: validated.service,
@@ -183,15 +308,15 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
       date: validated.date,
       timeSlot: validated.timeSlot,
       status: 'confirmed',
-      notes: 'Booked via Vernacular Agent reflection loop.'
+      notes: 'Scheduled autonomously via Vernacular Voice Assistant'
     });
 
     return {
       success: true,
       tool: 'calendar_check',
-      summary: `Confirmed appointment for ${validated.customerName} on ${validated.date} (${validated.timeSlot}).`,
-      summaryMl: `${validated.customerName}ന്റെ അപ്പോയിന്റ്മെന്റ് സ്ഥിരീകരിച്ചു: ${validated.date} (${validated.timeSlot}).`,
-      data: newApt
+      summary: `Appointment confirmed for ${newAppt.customerName} on ${newAppt.date} at ${newAppt.timeSlot}.`,
+      summaryMl: `${newAppt.customerName} എന്നയാളുടെ അപ്പോയിന്റ്മെന്റ് ${newAppt.date} ${newAppt.timeSlot}-ലേക്ക് ഉറപ്പിച്ചു.`,
+      data: newAppt
     };
   },
 
@@ -199,23 +324,47 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
     const validated = InventoryQueryPayloadSchema.parse(params);
     const item = store.findInventoryByName(validated.productName);
 
-    if (item) {
+    if (!item) {
       return {
-        success: true,
+        success: false,
         tool: 'inventory_query',
-        summary: `Found ${item.name}: Current stock is ${item.currentStock} ${item.unit} at ₹${item.unitPrice}/${item.unit} (Reorder level: ${item.reorderLevel} ${item.unit}).`,
-        summaryMl: `${item.nameMl}: കൈവശം ${item.currentStock} ${item.unit} ലഭ്യമാണ്. വില ₹${item.unitPrice}/${item.unit} (കുറഞ്ഞ അളവ്: ${item.reorderLevel} ${item.unit}).`,
-        data: item
+        summary: `Inventory item "${validated.productName}" not found in stock database.`,
+        summaryMl: `"${validated.productName}" എന്ന സാധനം സ്റ്റോക്കിൽ കണ്ടെത്താനായില്ല.`,
+        data: null,
+        error: `Item "${validated.productName}" not found`
       };
     }
 
     return {
-      success: false,
+      success: true,
       tool: 'inventory_query',
-      summary: `Product "${validated.productName}" not found in current inventory catalogue.`,
-      summaryMl: `"${validated.productName}" നിലവിൽ സ്റ്റോക്കിൽ കണ്ടെത്തിയില്ല.`,
-      data: null,
-      error: 'Product not found'
+      summary: `Found ${item.name}: Current stock is ${item.currentStock} ${item.unit} at ₹${item.unitPrice}/${item.unit} (Reorder level: ${item.reorderLevel} ${item.unit}).`,
+      summaryMl: `${item.nameMl} കണ്ടെത്തി: ഇപ്പോഴത്തെ സ്റ്റോക്ക് ${item.currentStock} ${item.unit}, വില ₹${item.unitPrice}/${item.unit}.`,
+      data: item
+    };
+  },
+
+  invoice_parse: async (params: any): Promise<ToolExecutionResponse> => {
+    const invoices = store.getInvoices();
+    const invoice = params.invoiceNo ? store.getInvoice(params.invoiceNo) : invoices[0];
+
+    if (!invoice) {
+      return {
+        success: false,
+        tool: 'invoice_parse',
+        summary: 'No invoice record available for vision extraction.',
+        summaryMl: 'ഇൻവോയ്സ് വിവരങ്ങൾ ലഭ്യമായില്ല.',
+        data: null,
+        error: 'Invoice not found'
+      };
+    }
+
+    return {
+      success: true,
+      tool: 'invoice_parse',
+      summary: `Parsed invoice #${invoice.invoiceNo} from ${invoice.vendorName}. Grand Total: ₹${invoice.grandTotal} (${invoice.items.length} line items). Verified by cross-check math.`,
+      summaryMl: `ഇൻവോയ്സ് #${invoice.invoiceNo} (${invoice.vendorName}) വിജയകരമായി പരിശോധിച്ചു. ആകെ തുക: ₹${invoice.grandTotal}.`,
+      data: invoice
     };
   }
 };

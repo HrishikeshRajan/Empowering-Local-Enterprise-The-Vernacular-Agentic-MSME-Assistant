@@ -192,6 +192,8 @@ export interface AgentProcessRequest {
   inputType?: 'voice' | 'text' | 'webhook';
   language?: Language;
   presetId?: string;
+  merchantPhone?: string;
+  businessId?: string;
 }
 
 export interface AgentCritiqueResult {

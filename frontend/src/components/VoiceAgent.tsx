@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Language, AgentTaskLog } from '../types';
 import { MOCK_VOICE_PRESETS, INITIAL_AGENT_LOGS } from '../mockData';
 import { getAgentLogs, processAgentCommand } from '../api/client';
@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Clock,
-  Filter
+  Filter,
+  Square
 } from 'lucide-react';
 
 interface VoiceAgentProps {
@@ -32,6 +33,90 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
   const [customInput, setCustomInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [filterTool, setFilterTool] = useState<string>('all');
+  const [isLiveRecording, setIsLiveRecording] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<'ml-IN' | 'en-IN'>(() => {
+    try {
+      const saved = localStorage.getItem('kada_voice_stt_lang');
+      if (saved === 'en-IN' || saved === 'ml-IN') return saved;
+    } catch {}
+    return 'ml-IN';
+  });
+  const liveRecognitionRef = useRef<any>(null);
+  const isLiveActiveRef = useRef(false);
+  const liveRetryRef = useRef(0);
+
+  const toggleLiveMic = () => {
+    if (isLiveRecording) {
+      isLiveActiveRef.current = false;
+      if (liveRecognitionRef.current) {
+        try { liveRecognitionRef.current.stop(); } catch {}
+      }
+      setIsLiveRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = voiceLang;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        isLiveActiveRef.current = true;
+        liveRetryRef.current = 0;
+
+        let accumulated = '';
+
+        recognition.onresult = (event: any) => {
+          let text = '';
+          for (let i = 0; i < event.results.length; i++) {
+            text += event.results[i][0].transcript;
+          }
+          accumulated = text;
+          setCustomInput(text);
+        };
+
+        recognition.onend = () => {
+          if (!isLiveActiveRef.current) {
+            setIsLiveRecording(false);
+            return;
+          }
+          if (accumulated && accumulated.trim().length > 0) {
+            isLiveActiveRef.current = false;
+            setIsLiveRecording(false);
+          } else if (liveRetryRef.current < 4) {
+            liveRetryRef.current += 1;
+            try { recognition.start(); } catch {}
+          } else {
+            isLiveActiveRef.current = false;
+            setIsLiveRecording(false);
+          }
+        };
+
+        recognition.onerror = (err: any) => {
+          console.warn('[VoiceAgent] Mic error:', err?.error);
+          if (err?.error === 'not-allowed') {
+            isLiveActiveRef.current = false;
+            setIsLiveRecording(false);
+          }
+        };
+
+        liveRecognitionRef.current = recognition;
+        setIsLiveRecording(true);
+        recognition.start();
+        return;
+      } catch (err) {
+        console.warn('[VoiceAgent] Mic start notice:', err);
+      }
+    }
+
+    // Fallback if browser does not support Web Speech
+    setCustomInput(voiceLang === 'ml-IN' 
+      ? 'തക്കാളി 15 കിലോ കൂടി സ്റ്റോക്കിൽ ചേർക്കൂ, വില കിലോയ്ക്ക് 40 രൂപ' 
+      : 'Add 15 kg of tomato to stock at ₹40/kg');
+  };
 
   useEffect(() => {
     getAgentLogs().then(data => {
@@ -346,33 +431,109 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
           </div>
 
           {/* Custom Text/Voice Input Form */}
-          <form onSubmit={handleCustomSubmit} style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              placeholder={language === 'ml' ? 'മലയാളത്തിൽ നിർദ്ദേശം ടൈപ്പ് ചെയ്യുക...' : 'Type custom command in Malayalam or English...'}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--line)',
-                background: 'var(--surface)',
-                color: 'var(--ink)',
-                fontSize: '0.85rem',
-                outline: 'none'
-              }}
-            />
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={isProcessing || !customInput.trim()}
-              style={{ padding: '0 18px' }}
-            >
-              <Send size={16} />
-              <span>Send</span>
-            </button>
-          </form>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--muted)', fontWeight: 600 }}>
+                {voiceLang === 'ml-IN' ? 'ശബ്ദ ഭാഷ: 🇮🇳 മലയാളം' : 'Voice Mode: 🇬🇧 English / Manglish'}
+              </span>
+              <div style={{ display: 'flex', gap: '4px', background: 'var(--tint)', padding: '2px', borderRadius: '6px', border: '1px solid var(--line)' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVoiceLang('ml-IN');
+                    try { localStorage.setItem('kada_voice_stt_lang', 'ml-IN'); } catch {}
+                  }}
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    background: voiceLang === 'ml-IN' ? 'var(--accent)' : 'transparent',
+                    color: voiceLang === 'ml-IN' ? '#fff' : 'var(--muted)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🇮🇳 ml-IN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVoiceLang('en-IN');
+                    try { localStorage.setItem('kada_voice_stt_lang', 'en-IN'); } catch {}
+                  }}
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    background: voiceLang === 'en-IN' ? 'var(--accent)' : 'transparent',
+                    color: voiceLang === 'en-IN' ? '#fff' : 'var(--muted)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🇬🇧 en-IN
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleCustomSubmit} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={toggleLiveMic}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  border: isLiveRecording ? 'none' : '1px solid var(--line)',
+                  background: isLiveRecording ? '#dc2626' : 'var(--tint)',
+                  color: isLiveRecording ? '#fff' : 'var(--accent)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  boxShadow: isLiveRecording ? '0 0 0 4px rgba(220, 38, 38, 0.25)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                title={isLiveRecording ? "Tap to stop recording" : "Tap to speak into mic"}
+                aria-label="Toggle microphone"
+              >
+                {isLiveRecording ? <Square size={16} fill="#fff" /> : <Mic size={18} />}
+              </button>
+
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder={
+                  isLiveRecording 
+                    ? (voiceLang === 'ml-IN' ? '🔴 മലയാളം ശ്രദ്ധിക്കുന്നു… സംസാരിക്കൂ' : '🔴 Listening… speak now')
+                    : (voiceLang === 'ml-IN' ? 'മലയാളത്തിൽ പറയൂ അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യൂ...' : 'Speak or type command (Malayalam/English)...')
+                }
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-full)',
+                  border: isLiveRecording ? '2px solid #dc2626' : '1px solid var(--line)',
+                  background: 'var(--surface)',
+                  color: 'var(--ink)',
+                  fontSize: '0.85rem',
+                  outline: 'none'
+                }}
+              />
+
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isProcessing || !customInput.trim()}
+                style={{ padding: '0 18px', height: '38px' }}
+              >
+                <Send size={16} />
+                <span>Send</span>
+              </button>
+            </form>
+          </div>
 
         </div>
 
@@ -482,16 +643,52 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     2
                   </span>
                   <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
-                    {language === 'ml' ? '2. കടയിലെ പ്രവർത്തനം' : '2. Store Action'}
+                    {language === 'ml' ? '2. കടയിലെ പ്രവർത്തനം (Store & Database Action)' : '2. Store & Database Action'}
                   </span>
                 </div>
-                <span className="glass-badge glass-badge-indigo" style={{ fontSize: '0.68rem' }}>
-                  {language === 'ml' ? 'ഓട്ടോമാറ്റിക്' : 'Automatic'}
-                </span>
+
+                {/* Database Persistence Status Badge */}
+                {selectedLog.steps[1]?.payload?.dbStatus?.synced === false ? (
+                  <span className="glass-badge" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '0.68rem', fontWeight: 700 }}>
+                    <AlertCircle size={10} />
+                    DB Error
+                  </span>
+                ) : selectedLog.steps[1]?.payload?.dbStatus?.synced === true ? (
+                  <span className="glass-badge" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontSize: '0.68rem', fontWeight: 700 }}>
+                    <CheckCircle2 size={10} />
+                    PostgreSQL Synced
+                  </span>
+                ) : (
+                  <span className="glass-badge glass-badge-indigo" style={{ fontSize: '0.68rem' }}>
+                    {language === 'ml' ? 'ഓട്ടോമാറ്റിക്' : 'Automatic'}
+                  </span>
+                )}
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--muted)', paddingLeft: '32px' }}>
                 {selectedLog.steps[1]?.description || 'Updated store inventory records.'}
               </p>
+
+              {/* Explicit Database Sync Error Notice */}
+              {selectedLog.steps[1]?.payload?.dbStatus?.error && (
+                <div style={{
+                  marginTop: '8px',
+                  marginLeft: '32px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#b91c1c',
+                  fontSize: '0.76rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>{language === 'ml' ? 'ഡാറ്റാബേസ് പിശക്:' : 'PostgreSQL Error:'}</strong> {selectedLog.steps[1].payload.dbStatus.error}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Step 3: Self-Critique & Safety Check */}
@@ -521,10 +718,17 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     {language === 'ml' ? '3. വിലയും കണക്കുകളും പരിശോധിക്കൽ' : '3. Price & Calculation Verification'}
                   </span>
                 </div>
-                <span className="glass-badge glass-badge-saffron" style={{ fontSize: '0.68rem' }}>
-                  <ShieldCheck size={12} />
-                  {language === 'ml' ? 'സുരക്ഷിതം' : 'Verified Safe'}
-                </span>
+                {selectedLog.steps[2]?.status === 'failed' ? (
+                  <span className="glass-badge" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '0.68rem', fontWeight: 700 }}>
+                    <AlertCircle size={12} />
+                    {language === 'ml' ? 'തടസ്സപ്പെട്ടു' : 'Critique Blocked'}
+                  </span>
+                ) : (
+                  <span className="glass-badge glass-badge-saffron" style={{ fontSize: '0.68rem' }}>
+                    <ShieldCheck size={12} />
+                    {language === 'ml' ? 'സുരക്ഷിതം' : 'Verified Safe'}
+                  </span>
+                )}
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--muted)', paddingLeft: '32px' }}>
                 {selectedLog.steps[2]?.description || 'Verified numbers match market averages and contain zero errors.'}
@@ -536,7 +740,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               padding: '14px', 
               borderRadius: 'var(--radius-md)', 
               background: activeStepIndex >= 3 ? 'var(--soft)' : 'var(--tint)',
-              border: '1px solid var(--line)'
+              border: selectedLog.status === 'FLAGGED' ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid var(--line)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -544,7 +748,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     width: '24px', 
                     height: '24px', 
                     borderRadius: '50%', 
-                    background: 'var(--accent)', 
+                    background: selectedLog.status === 'FLAGGED' ? '#d97706' : 'var(--accent)', 
                     color: '#fff', 
                     fontSize: '0.75rem', 
                     fontWeight: 700, 
@@ -555,17 +759,41 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     4
                   </span>
                   <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink)' }}>
-                    {language === 'ml' ? 'വിജയകരമായ പൂർത്തീകരണം (Refine & Output)' : '4. Final Refinement & Delivery'}
+                    {language === 'ml' ? '4. അന്തിമ പരിശോധനാ ഫലം' : '4. Final Delivery & Status'}
                   </span>
                 </div>
-                <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.68rem' }}>
-                  <CheckCircle2 size={12} />
-                  SUCCESS
-                </span>
+
+                {selectedLog.status === 'FLAGGED' ? (
+                  <span className="glass-badge" style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', fontSize: '0.68rem', fontWeight: 700 }}>
+                    <AlertCircle size={12} />
+                    {language === 'ml' ? 'ശ്രദ്ധിക്കുക (Needs Review)' : 'Needs Review'}
+                  </span>
+                ) : (
+                  <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.68rem' }}>
+                    <CheckCircle2 size={12} />
+                    SUCCESS
+                  </span>
+                )}
               </div>
-              <p className="font-ml" style={{ fontSize: '0.82rem', color: 'var(--accent-d)', paddingLeft: '32px', fontWeight: 500 }}>
-                {language === 'ml' ? selectedLog.outputSummaryMl : selectedLog.outputSummary}
+              <p className="font-ml" style={{ fontSize: '0.82rem', color: selectedLog.status === 'FLAGGED' ? '#b45309' : 'var(--accent-d)', paddingLeft: '32px', fontWeight: 600 }}>
+                {language === 'ml' ? (selectedLog.outputSummaryMl || selectedLog.outputSummary) : selectedLog.outputSummary}
               </p>
+
+              {/* Review Reason Alert if Flagged */}
+              {selectedLog.reviewReason && (
+                <div style={{
+                  marginTop: '6px',
+                  marginLeft: '32px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  color: '#92400e',
+                  fontSize: '0.74rem'
+                }}>
+                  ⚠️ <strong>{language === 'ml' ? 'കാരണം:' : 'Reason:'}</strong> {selectedLog.reviewReason}
+                </div>
+              )}
             </div>
 
           </div>
@@ -659,10 +887,17 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                     {log.executionTimeMs}ms
                   </td>
                   <td style={{ padding: '12px 14px' }}>
-                    <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.72rem' }}>
-                      <CheckCircle2 size={12} />
-                      {log.status}
-                    </span>
+                    {log.status === 'SUCCESS' ? (
+                      <span className="glass-badge glass-badge-emerald" style={{ fontSize: '0.72rem' }}>
+                        <CheckCircle2 size={12} />
+                        SUCCESS
+                      </span>
+                    ) : (
+                      <span className="glass-badge" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '0.72rem', fontWeight: 700 }} title={log.reviewReason}>
+                        <AlertCircle size={12} />
+                        {log.status}
+                      </span>
+                    )}
                   </td>
                   <td style={{ padding: '12px 14px' }}>
                     <button

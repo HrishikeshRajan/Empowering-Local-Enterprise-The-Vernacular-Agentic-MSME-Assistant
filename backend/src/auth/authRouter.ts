@@ -10,13 +10,21 @@ export const authRouter = Router();
 const activeOtps = new Map<string, { code: string; expiresAt: number }>();
 
 // In-memory store for verified authentication tokens
-interface ActiveSession {
+export interface ActiveSession {
   phone: string;
   businessId?: string;
   profile: StoreProfile;
   createdAt: number;
 }
-const activeSessions = new Map<string, ActiveSession>();
+export const activeSessions = new Map<string, ActiveSession>();
+
+export function resolveSessionFromAuthHeader(authHeader?: string): ActiveSession | null {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    return activeSessions.get(token) || null;
+  }
+  return null;
+}
 
 const DEMO_PHONE = '+91 94471 23456';
 

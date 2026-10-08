@@ -178,15 +178,29 @@ export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, 
               {t('See all →', 'എല്ലാം കാണൂ →', lang)}
             </button>
           </div>
-          {recent.map(log => (
-            <div key={log.id} className="item">
-              <span className="dot"><KadaIcon id="i-check" /></span>
-              <span className="x">
-                <b className="clamp">{lang === 'ml' ? log.outputSummaryMl : log.outputSummary}</b>
-              </span>
-              <span className="bd">{t('Done', 'ചെയ്തു', lang)}</span>
-            </div>
-          ))}
+          {recent.map(log => {
+            const isWarning = log.status !== 'SUCCESS';
+            return (
+              <div key={log.id} className="item">
+                <span className="dot" style={isWarning ? { background: '#fef2f2', color: '#b91c1c' } : undefined}>
+                  <KadaIcon id={isWarning ? 'i-warn' : 'i-check'} />
+                </span>
+                <span className="x">
+                  <b className="clamp" style={isWarning ? { color: '#b91c1c' } : undefined}>
+                    {lang === 'ml' ? (log.outputSummaryMl || log.outputSummary) : log.outputSummary}
+                  </b>
+                  {log.reviewReason && (
+                    <small style={{ color: '#b45309', display: 'block', fontSize: '0.72rem' }}>
+                      ⚠️ {log.reviewReason}
+                    </small>
+                  )}
+                </span>
+                <span className="bd" style={isWarning ? { background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' } : undefined}>
+                  {isWarning ? t('Attention', 'ശ്രദ്ധിക്കുക', lang) : t('Done', 'ചെയ്തു', lang)}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
       </div>

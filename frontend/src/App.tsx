@@ -215,6 +215,8 @@ export function App() {
     handleBackToLanding();
   };
 
+  const [stockRefreshKey, setStockRefreshKey] = useState(0);
+
   const handleBackToLanding = () => {
     if (typeof window !== 'undefined' && window.location.pathname !== '/') {
       window.history.pushState({}, '', '/');
@@ -223,8 +225,9 @@ export function App() {
   };
 
   const handleVoiceCommandSelected = (_cmdText: string) => {
+    setStockRefreshKey(k => k + 1);
     handleLaunchApp();
-    setCurrentTab('voice-agent');
+    setCurrentTab('inventory');
   };
 
   if (viewMode === 'landing') {
@@ -292,9 +295,18 @@ export function App() {
             )}
             {currentTab === 'whatsapp' && <WhatsAppHub language={language} />}
             {currentTab === 'invoices' && <InvoiceParser language={language} />}
-            {currentTab === 'voice-agent' && <VoiceAgent language={language} />}
+            {currentTab === 'voice-agent' && (
+              <VoiceAgent 
+                language={language} 
+                onStockUpdated={() => setStockRefreshKey(k => k + 1)} 
+              />
+            )}
             {currentTab === 'inventory' && (
-              <InventoryManager language={language} onOpenVoiceModal={() => setIsVoiceModalOpen(true)} />
+              <InventoryManager 
+                key={stockRefreshKey} 
+                language={language} 
+                onOpenVoiceModal={() => setIsVoiceModalOpen(true)} 
+              />
             )}
             {currentTab === 'appointments' && <Appointments language={language} />}
             {currentTab === 'settings' && (

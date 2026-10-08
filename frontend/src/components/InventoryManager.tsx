@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Language, InventoryItem } from '../types';
 import { MOCK_INVENTORY } from '../mockData';
+import { getInventory, processAgentCommand } from '../api/client';
 import { 
   Package, 
   AlertTriangle, 
@@ -8,9 +9,10 @@ import {
   Plus, 
   Send, 
   TrendingUp, 
-  Search,
+  Search, 
   Filter,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 
 interface InventoryManagerProps {
@@ -23,13 +25,40 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ language, on
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [restockedItemId, setRestockedItemId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleQuickRestock = (item: InventoryItem) => {
+  const fetchStock = async () => {
+    try {
+      setIsRefreshing(true);
+      const res = await getInventory();
+      if (res && res.length > 0) setItems(res);
+    } catch (err) {
+      console.warn('[InventoryManager] Notice:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStock();
+  }, []);
+
+  const handleQuickRestock = async (item: InventoryItem) => {
     setRestockedItemId(item.id);
-    setTimeout(() => {
-      setItems(items.map(i => i.id === item.id ? { ...i, currentStock: i.currentStock + 20, lastRestocked: 'Just now (Agent Order)' } : i));
+    try {
+      await processAgentCommand({
+        inputPrompt: `Add 20 ${item.unit} to stock for ${item.name}`,
+        inputPromptMl: `${item.nameMl} 20 ${item.unit} സ്റ്റോക്കിൽ ചേർക്കൂ`,
+        inputType: 'voice',
+        language
+      });
+      const updated = await getInventory();
+      if (updated && updated.length > 0) setItems(updated);
+    } catch {
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, currentStock: i.currentStock + 20, lastRestocked: 'Just now (Agent Order)' } : i));
+    } finally {
       setRestockedItemId(null);
-    }, 1500);
+    }
   };
 
   const filteredItems = items.filter(item => {

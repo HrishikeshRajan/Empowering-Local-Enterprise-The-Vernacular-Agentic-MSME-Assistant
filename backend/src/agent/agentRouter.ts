@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { reflectionEngine } from './reflectionEngine.js';
 import { store } from '../data/store.js';
+import { resolveSessionFromAuthHeader } from '../auth/authRouter.js';
 
 export const agentRouter = Router();
 
@@ -43,11 +44,17 @@ agentRouter.post('/process', async (req: Request, res: Response) => {
       }
     }
 
+    const session = resolveSessionFromAuthHeader(req.headers.authorization);
+    const merchantPhone = session?.phone || store.getProfile()?.phone;
+    const businessId = session?.businessId;
+
     const result = await reflectionEngine.executeWithReflection({
       inputPrompt: finalPrompt,
       inputPromptMl: finalPromptMl,
       inputType,
-      language
+      language,
+      merchantPhone,
+      businessId
     });
 
     // Notify connected SSE stream subscribers
