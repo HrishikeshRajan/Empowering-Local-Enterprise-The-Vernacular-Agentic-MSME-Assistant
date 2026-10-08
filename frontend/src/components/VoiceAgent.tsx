@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Language, AgentTaskLog } from '../types';
 import { MOCK_VOICE_PRESETS, INITIAL_AGENT_LOGS } from '../mockData';
-import { getAgentLogs, processAgentCommand } from '../api/client';
+import { getAgentLogs, processAgentCommand, transcribeVoiceNote } from '../api/client';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { 
   Mic, 
   Play, 
@@ -17,7 +18,8 @@ import {
   ShieldCheck,
   Clock,
   Filter,
-  Square
+  Square,
+  Loader2
 } from 'lucide-react';
 
 interface VoiceAgentProps {
@@ -33,7 +35,6 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
   const [customInput, setCustomInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [filterTool, setFilterTool] = useState<string>('all');
-  const [isLiveRecording, setIsLiveRecording] = useState(false);
   const [voiceLang, setVoiceLang] = useState<'ml-IN' | 'en-IN'>(() => {
     try {
       const saved = localStorage.getItem('kada_voice_stt_lang');
@@ -41,82 +42,52 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
     } catch {}
     return 'ml-IN';
   });
-  const liveRecognitionRef = useRef<any>(null);
-  const isLiveActiveRef = useRef(false);
-  const liveRetryRef = useRef(0);
 
-  const toggleLiveMic = () => {
-    if (isLiveRecording) {
-      isLiveActiveRef.current = false;
-      if (liveRecognitionRef.current) {
-        try { liveRecognitionRef.current.stop(); } catch {}
+  const recorder = useAudioRecorder();
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [sttNotice, setSttNotice] = useState<string | null>(null);
+
+  const toggleLiveMic = async () => {
+    if (recorder.isRecording) {
+      setIsTranscribing(true);
+      setSttNotice(voiceLang === 'ml-IN' ? 'Sarvam AI വഴി വിവർത്തനം ചെയ്യുന്നു…' : 'Transcribing via Sarvam AI…');
+      try {
+        const clip = await recorder.stop();
+        if (clip && clip.blob.size > 0) {
+          const form = new FormData();
+          form.append('audio', clip.blob, clip.filename);
+          form.append('language', voiceLang === 'ml-IN' ? 'ml' : 'en');
+          form.append('autoExecute', 'false');
+
+          const res = await transcribeVoiceNote(form);
+          if (res?.transcription?.transcript) {
+            setCustomInput(res.transcription.transcript);
+            setSttNotice(`✓ Sarvam AI: ${res.transcription.language || voiceLang} → EN (${res.transcription.confidence || 96}% conf)`);
+          } else if (res?.transcription?.reviewReason) {
+            setSttNotice(`! ${res.transcription.reviewReason}`);
+          }
+        }
+      } catch (err: any) {
+        console.error('[VoiceAgent] Voice translation error:', err);
+        setSttNotice(`! Translation error: ${err.message}`);
+      } finally {
+        setIsTranscribing(false);
+        setTimeout(() => setSttNotice(null), 5000);
       }
-      setIsLiveRecording(false);
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.lang = voiceLang;
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.maxAlternatives = 1;
-
-        isLiveActiveRef.current = true;
-        liveRetryRef.current = 0;
-
-        let accumulated = '';
-
-        recognition.onresult = (event: any) => {
-          let text = '';
-          for (let i = 0; i < event.results.length; i++) {
-            text += event.results[i][0].transcript;
-          }
-          accumulated = text;
-          setCustomInput(text);
-        };
-
-        recognition.onend = () => {
-          if (!isLiveActiveRef.current) {
-            setIsLiveRecording(false);
-            return;
-          }
-          if (accumulated && accumulated.trim().length > 0) {
-            isLiveActiveRef.current = false;
-            setIsLiveRecording(false);
-          } else if (liveRetryRef.current < 4) {
-            liveRetryRef.current += 1;
-            try { recognition.start(); } catch {}
-          } else {
-            isLiveActiveRef.current = false;
-            setIsLiveRecording(false);
-          }
-        };
-
-        recognition.onerror = (err: any) => {
-          console.warn('[VoiceAgent] Mic error:', err?.error);
-          if (err?.error === 'not-allowed') {
-            isLiveActiveRef.current = false;
-            setIsLiveRecording(false);
-          }
-        };
-
-        liveRecognitionRef.current = recognition;
-        setIsLiveRecording(true);
-        recognition.start();
-        return;
-      } catch (err) {
-        console.warn('[VoiceAgent] Mic start notice:', err);
-      }
+    // Start microphone recording
+    try {
+      setSttNotice(voiceLang === 'ml-IN' ? '🔴 സംസാരിക്കൂ… (റെക്കോർഡ് ചെയ്യുന്നു)' : '🔴 Speak now… (Recording)');
+      await recorder.start();
+    } catch (err: any) {
+      setCustomInput(voiceLang === 'ml-IN' 
+        ? 'തക്കാളി 15 കിലോ കൂടി സ്റ്റോക്കിൽ ചേർക്കൂ, വില കിലോയ്ക്ക് 40 രൂപ' 
+        : 'Add 15 kg of tomato to stock at ₹40/kg');
     }
-
-    // Fallback if browser does not support Web Speech
-    setCustomInput(voiceLang === 'ml-IN' 
-      ? 'തക്കാളി 15 കിലോ കൂടി സ്റ്റോക്കിൽ ചേർക്കൂ, വില കിലോയ്ക്ക് 40 രൂപ' 
-      : 'Add 15 kg of tomato to stock at ₹40/kg');
   };
+
 
   useEffect(() => {
     getAgentLogs().then(data => {
@@ -482,24 +453,31 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               <button
                 type="button"
                 onClick={toggleLiveMic}
+                disabled={isTranscribing}
                 style={{
                   width: '38px',
                   height: '38px',
                   borderRadius: '50%',
-                  border: isLiveRecording ? 'none' : '1px solid var(--line)',
-                  background: isLiveRecording ? '#dc2626' : 'var(--tint)',
-                  color: isLiveRecording ? '#fff' : 'var(--accent)',
+                  border: recorder.isRecording ? 'none' : '1px solid var(--line)',
+                  background: recorder.isRecording ? '#dc2626' : isTranscribing ? 'var(--tint)' : 'var(--tint)',
+                  color: recorder.isRecording ? '#fff' : 'var(--accent)',
                   display: 'grid',
                   placeItems: 'center',
-                  cursor: 'pointer',
+                  cursor: isTranscribing ? 'wait' : 'pointer',
                   flexShrink: 0,
-                  boxShadow: isLiveRecording ? '0 0 0 4px rgba(220, 38, 38, 0.25)' : 'none',
+                  boxShadow: recorder.isRecording ? '0 0 0 4px rgba(220, 38, 38, 0.25)' : 'none',
                   transition: 'all 0.2s ease'
                 }}
-                title={isLiveRecording ? "Tap to stop recording" : "Tap to speak into mic"}
+                title={recorder.isRecording ? "Tap to stop recording & translate with Sarvam" : "Tap to speak into mic (Sarvam STT)"}
                 aria-label="Toggle microphone"
               >
-                {isLiveRecording ? <Square size={16} fill="#fff" /> : <Mic size={18} />}
+                {isTranscribing ? (
+                  <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                ) : recorder.isRecording ? (
+                  <Square size={16} fill="#fff" />
+                ) : (
+                  <Mic size={18} />
+                )}
               </button>
 
               <input
@@ -507,15 +485,17 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 placeholder={
-                  isLiveRecording 
-                    ? (voiceLang === 'ml-IN' ? '🔴 മലയാളം ശ്രദ്ധിക്കുന്നു… സംസാരിക്കൂ' : '🔴 Listening… speak now')
+                  isTranscribing
+                    ? 'Sarvam AI വഴി വിവർത്തനം ചെയ്യുന്നു…'
+                    : recorder.isRecording 
+                    ? (voiceLang === 'ml-IN' ? `🔴 റെക്കോർഡ് ചെയ്യുന്നു… (0:${recorder.elapsedSeconds.toString().padStart(2, '0')})` : `🔴 Recording… (0:${recorder.elapsedSeconds.toString().padStart(2, '0')})`)
                     : (voiceLang === 'ml-IN' ? 'മലയാളത്തിൽ പറയൂ അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യൂ...' : 'Speak or type command (Malayalam/English)...')
                 }
                 style={{
                   flex: 1,
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-full)',
-                  border: isLiveRecording ? '2px solid #dc2626' : '1px solid var(--line)',
+                  border: recorder.isRecording ? '2px solid #dc2626' : '1px solid var(--line)',
                   background: 'var(--surface)',
                   color: 'var(--ink)',
                   fontSize: '0.85rem',
@@ -526,14 +506,30 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ language, onStockUpdated
               <button 
                 type="submit" 
                 className="btn-primary" 
-                disabled={isProcessing || !customInput.trim()}
+                disabled={isProcessing || isTranscribing || !customInput.trim()}
                 style={{ padding: '0 18px', height: '38px' }}
               >
                 <Send size={16} />
                 <span>Send</span>
               </button>
             </form>
+
+            {sttNotice && (
+              <div style={{
+                marginTop: '6px',
+                fontSize: '0.78rem',
+                color: sttNotice.startsWith('✓') ? 'var(--accent-d)' : sttNotice.startsWith('!') ? '#dc2626' : 'var(--accent)',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <Sparkles size={12} color="var(--accent-d)" />
+                <span>{sttNotice}</span>
+              </div>
+            )}
           </div>
+
 
         </div>
 

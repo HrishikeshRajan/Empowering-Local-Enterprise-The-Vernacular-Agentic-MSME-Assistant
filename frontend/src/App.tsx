@@ -287,6 +287,7 @@ export function App() {
           <main className="main">
             {currentTab === 'overview' && (
               <Overview
+                key={stockRefreshKey}
                 language={language}
                 onNavigate={setCurrentTab}
                 onOpenVoiceModal={() => setIsVoiceModalOpen(true)}

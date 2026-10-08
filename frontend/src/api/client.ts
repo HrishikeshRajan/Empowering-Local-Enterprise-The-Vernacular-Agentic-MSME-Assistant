@@ -111,26 +111,47 @@ export async function getVoicePresets(): Promise<VoicePreset[]> {
   return safeFetch<VoicePreset[]>('/voice/presets', undefined, MOCK_VOICE_PRESETS as any);
 }
 
-export async function transcribeVoiceNote(formData: FormData): Promise<any> {
-  try {
-    const res = await fetch(`${BASE_URL}/voice/transcribe`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) throw new Error(`Transcription failed: ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('[API Client] Transcription fallback:', err);
-    return {
-      transcription: {
-        success: true,
-        transcript: 'Add 15 kg of tomato to stock at ₹40/kg',
-        transcriptMl: 'രാവിലെ വന്ന തക്കാളി 15 കിലോ കൂടി സ്റ്റോക്കിൽ ചേർക്കൂ, വില കിലോയ്ക്ക് 40 രൂപ.',
-        confidence: 96.8
-      }
-    };
+export async function transcribeVoiceNote(formData: FormData): Promise<{
+  transcription: {
+    success: boolean;
+    engine: string;
+    language: string;
+    transcript: string;
+    transcriptMl?: string;
+    confidence: number;
+    durationSeconds: number;
+    requestId?: string | null;
+    needsReview?: boolean;
+    reviewReason?: string | null;
+  };
+  agentExecution?: any;
+}> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+
+  const res = await fetch(`${BASE_URL}/voice/transcribe`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+
+  if (!res.ok) {
+    let errorMsg = `Transcription failed: HTTP ${res.status}`;
+    try {
+      const data = await res.json();
+      if (data?.error) errorMsg = data.error;
+    } catch {
+      const text = await res.text().catch(() => '');
+      if (text) errorMsg = text.slice(0, 200);
+    }
+    throw new Error(errorMsg);
   }
+
+  return await res.json();
 }
+
 
 // --- Invoices APIs ---
 export async function getInvoices(): Promise<InvoiceData[]> {

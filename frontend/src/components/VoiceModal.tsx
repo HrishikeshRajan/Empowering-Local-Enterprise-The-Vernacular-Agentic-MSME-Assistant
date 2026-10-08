@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Language } from '../types';
 import { KadaSheet } from './ui';
 import { MOCK_VOICE_PRESETS } from '../mockData';
-import { processAgentCommand } from '../api/client';
+import { processAgentCommand, transcribeVoiceNote } from '../api/client';
+import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { 
   Mic, 
   Square, 
@@ -12,7 +13,8 @@ import {
   AlertCircle, 
   Sparkles,
   Zap,
-  Volume2
+  Volume2,
+  Loader2
 } from 'lucide-react';
 
 interface VoiceModalProps {
@@ -36,13 +38,14 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
     } catch {}
     return 'ml-IN'; // Default to Malayalam for local MSME operations
   });
-  const [isDetectingVoice, setIsDetectingVoice] = useState(false);
+  
+  // Sarvam AI STT metadata
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [detectedEngine, setDetectedEngine] = useState<string | null>(null);
+  const [detectedLangCode, setDetectedLangCode] = useState<string | null>(null);
+  const [transcriptionConfidence, setTranscriptionConfidence] = useState<number | null>(null);
 
-  const recognitionRef = useRef<any>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const isListeningActiveRef = useRef(false);
-  const silenceRetryRef = useRef(0);
-  const accumulatedRef = useRef('');
+  const recorder = useAudioRecorder();
 
   // Switch voice language
   const handleSwitchLang = (lang: 'ml-IN' | 'en-IN') => {
@@ -50,196 +53,101 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
     try {
       localStorage.setItem('kada_voice_stt_lang', lang);
     } catch {}
-    if (phase === 'listening') {
-      stopListeningCleanup();
-      setTimeout(() => startListening(lang), 150);
-    }
   };
 
   // Cleanup on close
   useEffect(() => {
     if (!isOpen) {
-      stopListeningCleanup();
+      recorder.cancel();
       setPhase('idle');
       setTranscript('');
       setErrorMsg(null);
       setExecutionResult(null);
-      setIsDetectingVoice(false);
+      setIsTranscribing(false);
     }
   }, [isOpen]);
 
-  const stopListeningCleanup = () => {
-    isListeningActiveRef.current = false;
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onspeechstart = null;
-        recognitionRef.current.onspeechend = null;
-        recognitionRef.current.stop();
-      } catch {}
-      recognitionRef.current = null;
-    }
-    setIsDetectingVoice(false);
-  };
-
-  const startListening = (forcedLang?: 'ml-IN' | 'en-IN') => {
-    stopListeningCleanup();
-    const activeLang = forcedLang || speechLang;
-    isListeningActiveRef.current = true;
-    silenceRetryRef.current = 0;
-    accumulatedRef.current = '';
-
-    setPhase('listening');
-    setTranscript('');
+  const startListening = async () => {
     setErrorMsg(null);
     setExecutionResult(null);
-    setIsDetectingVoice(false);
+    setTranscript('');
+    setDetectedEngine(null);
+    setDetectedLangCode(null);
+    setTranscriptionConfidence(null);
+    setPhase('listening');
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.lang = activeLang;
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.maxAlternatives = 1;
-
-        recognition.onspeechstart = () => {
-          setIsDetectingVoice(true);
-        };
-
-        recognition.onspeechend = () => {
-          setIsDetectingVoice(false);
-        };
-
-        recognition.onresult = (event: any) => {
-          setIsDetectingVoice(true);
-          let interim = '';
-          let final = '';
-
-          for (let i = 0; i < event.results.length; i++) {
-            const piece = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              final += piece + ' ';
-            } else {
-              interim += piece;
-            }
-          }
-
-          const combined = (final + interim).trim();
-          accumulatedRef.current = combined;
-          setTranscript(combined);
-        };
-
-        recognition.onerror = (event: any) => {
-          console.warn('[Speech Recognition] Error code:', event.error);
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            isListeningActiveRef.current = false;
-            setErrorMsg(
-              activeLang === 'ml-IN'
-                ? 'മൈക്രോഫോൺ അനുമതി ലഭിച്ചില്ല. ബ്രൗസറിന്റെ URL ബാറിലെ ലോക്ക് (🔒) ഐക്കൺ ക്ലിക്ക് ചെയ്ത് Microphone "Allow" ചെയ്യുക.'
-                : 'Microphone permission blocked. Click the lock icon (🔒) in your browser URL bar and set Microphone to "Allow".'
-            );
-            setPhase('idle');
-            stopListeningCleanup();
-          } else if (event.error === 'network') {
-            isListeningActiveRef.current = false;
-            setErrorMsg(
-              activeLang === 'ml-IN'
-                ? 'ഇന്റർനെറ്റ് കണക്ഷൻ പ്രശ്നം. താഴെയുള്ള സാമ്പിൾ ക്ലിക്ക് ചെയ്യുകയോ ടൈപ്പ് ചെയ്യുകയോ ചെയ്യാം.'
-                : 'Speech service network timeout. Please select a quick sample or type below.'
-            );
-          } else if (event.error === 'no-speech') {
-            // Soft notice: allow auto-restart if still in listening state
-          }
-        };
-
-        recognition.onend = () => {
-          setIsDetectingVoice(false);
-
-          if (!isListeningActiveRef.current) {
-            // User intentionally stopped
-            if (accumulatedRef.current && accumulatedRef.current.trim().length > 0) {
-              setPhase('review');
-            }
-            return;
-          }
-
-          // If the user already spoke and Chrome auto-stopped after pause:
-          if (accumulatedRef.current && accumulatedRef.current.trim().length > 0) {
-            isListeningActiveRef.current = false;
-            setPhase('review');
-            return;
-          }
-
-          // Chrome closed due to brief initial silence: keep listening up to 4 retries
-          if (silenceRetryRef.current < 4) {
-            silenceRetryRef.current += 1;
-            try {
-              recognition.start();
-            } catch {
-              // Ignore if already starting
-            }
-          } else {
-            isListeningActiveRef.current = false;
-            setPhase('review');
-            setErrorMsg(
-              activeLang === 'ml-IN'
-                ? 'ശബ്ദം വ്യക്തമായി കേട്ടില്ല. താഴെയുള്ള സാമ്പിൾ തിരഞ്ഞെടുക്കുകയോ വീണ്ടും പറയുകയോ ചെയ്യാം.'
-                : 'No speech detected. Speak closer to the mic or click a sample below.'
-            );
-          }
-        };
-
-        recognitionRef.current = recognition;
-        recognition.start();
-
-        // Safety timeout: auto-stop after 16 seconds
-        timers.current.push(
-          setTimeout(() => {
-            if (isListeningActiveRef.current) {
-              handleStopListening();
-            }
-          }, 16000)
-        );
-
-        return;
-      } catch (err: any) {
-        console.warn('[Speech Recognition] Initialization failed, using fallback:', err);
-      }
+    try {
+      await recorder.start();
+    } catch (err: any) {
+      console.warn('[VoiceModal] Mic start error:', err);
+      setErrorMsg(
+        speechLang === 'ml-IN'
+          ? 'മൈക്രോഫോൺ അനുമതി ലഭിച്ചില്ല. ബ്രൗസറിൽ Microphone "Allow" ചെയ്യുക.'
+          : 'Microphone permission blocked. Please allow mic access in your browser.'
+      );
+      setPhase('idle');
     }
-
-    // Fallback simulation for unsupported browsers
-    const sample = MOCK_VOICE_PRESETS[0];
-    timers.current.push(
-      setTimeout(() => {
-        setTranscript(activeLang === 'ml-IN' ? sample.malayalamAudioText : sample.englishTranslation);
-        setPhase('review');
-      }, 1500)
-    );
   };
 
-  const handleStopListening = () => {
-    isListeningActiveRef.current = false;
-    stopListeningCleanup();
+  const handleStopListening = async () => {
     setPhase('review');
-    if (!transcript.trim()) {
-      const preset = MOCK_VOICE_PRESETS[0];
-      setTranscript(speechLang === 'ml-IN' ? preset.malayalamAudioText : preset.englishTranslation);
+    setIsTranscribing(true);
+    setErrorMsg(null);
+
+    try {
+      const clip = await recorder.stop();
+
+      if (clip && clip.blob.size > 0) {
+        console.log(`[VoiceModal] Captured audio clip (${clip.blob.size} bytes, ${clip.durationSeconds}s). Uploading to Sarvam STT Translate...`);
+
+        const formData = new FormData();
+        formData.append('audio', clip.blob, clip.filename);
+        formData.append('language', speechLang === 'ml-IN' ? 'ml' : 'en');
+        formData.append('autoExecute', 'false'); // Merchant reviews English translation before executing
+
+        const result = await transcribeVoiceNote(formData);
+        console.log('[VoiceModal] Sarvam STT response:', result);
+
+        if (result?.transcription) {
+          const t = result.transcription;
+          setTranscript(t.transcript || '');
+          setDetectedEngine(t.engine || 'Sarvam AI (saaras:v2.5 speech-to-text-translate)');
+          setDetectedLangCode(t.language || (speechLang === 'ml-IN' ? 'ml-IN' : 'en-IN'));
+          setTranscriptionConfidence(t.confidence || 96.5);
+
+          if (!t.transcript && t.reviewReason) {
+            setErrorMsg(t.reviewReason);
+          }
+        }
+      } else {
+        // Fallback if no audio recorded
+        if (!transcript.trim()) {
+          const preset = MOCK_VOICE_PRESETS[0];
+          setTranscript(speechLang === 'ml-IN' ? preset.malayalamAudioText : preset.englishTranslation);
+        }
+      }
+    } catch (err: any) {
+      console.error('[VoiceModal] Transcription failure:', err);
+      setErrorMsg(err.message || 'Voice translation failed. You can edit the command below or select a sample.');
+      if (!transcript.trim()) {
+        const preset = MOCK_VOICE_PRESETS[0];
+        setTranscript(speechLang === 'ml-IN' ? preset.malayalamAudioText : preset.englishTranslation);
+      }
+    } finally {
+      setIsTranscribing(false);
     }
   };
 
   const handleSelectPreset = (preset: typeof MOCK_VOICE_PRESETS[0]) => {
-    stopListeningCleanup();
-    setTranscript(speechLang === 'ml-IN' ? preset.malayalamAudioText : preset.englishTranslation);
+    recorder.cancel();
+    setTranscript(preset.englishTranslation);
+    setDetectedEngine('Preset Voice Template');
+    setDetectedLangCode('ml-IN');
+    setTranscriptionConfidence(preset.confidence);
     setErrorMsg(null);
     setPhase('review');
   };
+
 
   const handleExecute = async () => {
     if (!transcript.trim() || phase === 'executing') return;
@@ -413,7 +321,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
                 position: 'absolute',
                 inset: '-12px',
                 borderRadius: '50%',
-                background: isDetectingVoice ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.25)',
+                background: 'rgba(239, 68, 68, 0.25)',
                 animation: 'pulse 1.2s infinite'
               }} />
               <button
@@ -422,7 +330,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
                   width: '88px',
                   height: '88px',
                   borderRadius: '50%',
-                  background: isDetectingVoice ? '#16a34a' : '#dc2626',
+                  background: '#dc2626',
                   color: '#fff',
                   border: 'none',
                   display: 'grid',
@@ -445,43 +353,44 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
                   key={idx}
                   style={{
                     width: '3px',
-                    height: isDetectingVoice ? `${h}px` : '4px',
+                    height: `${h}px`,
                     borderRadius: '2px',
-                    background: isDetectingVoice ? 'var(--accent)' : 'var(--line)',
-                    transition: 'height 0.15s ease'
+                    background: 'var(--accent)',
+                    animation: `pulse ${0.6 + (idx * 0.15)}s ease-in-out infinite alternate`
                   }}
                 />
               ))}
             </div>
 
-            <p style={{ fontWeight: 700, color: isDetectingVoice ? 'var(--accent-d)' : '#dc2626', fontSize: '0.95rem', margin: '4px 0' }}>
-              {isDetectingVoice
-                ? (speechLang === 'ml-IN' ? '🟢 ശബ്ദം ലഭിക്കുന്നു…' : '🟢 Voice detected…')
-                : (speechLang === 'ml-IN' ? '🔴 മലയാളം ശ്രദ്ധിക്കുന്നു… (സംസാരിക്കൂ)' : '🔴 Listening… (Speak clearly)')}
+            <p style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.95rem', margin: '4px 0' }}>
+              {speechLang === 'ml-IN' ? '🔴 സംസാരിക്കൂ… (റെക്കോർഡ് ചെയ്യുന്നു)' : '🔴 Speak now… (Recording)'}
             </p>
 
-            {/* Live speech preview box */}
+            {/* Recording timer box */}
             <div style={{
-              margin: '12px auto 0',
-              padding: '14px 18px',
+              margin: '10px auto 0',
+              padding: '10px 18px',
               borderRadius: '12px',
               background: 'var(--tint)',
-              border: isDetectingVoice ? '2px solid var(--accent)' : '1px solid var(--line)',
-              minHeight: '64px',
-              display: 'flex',
+              border: '1px solid var(--line)',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '8px',
               color: 'var(--ink)',
-              fontSize: '1.02rem',
-              fontWeight: 600,
-              textAlign: 'center',
-              transition: 'border 0.2s ease'
+              fontSize: '0.95rem',
+              fontWeight: 600
             }}>
-              {transcript || (
-                <span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: '0.9rem' }}>
-                  {speechLang === 'ml-IN' ? 'നിങ്ങൾ സംസാരിക്കുന്നത് ഇവിടെ കാണാം…' : 'Say your command…'}
-                </span>
-              )}
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#dc2626',
+                display: 'inline-block'
+              }} />
+              <span>0:{recorder.elapsedSeconds.toString().padStart(2, '0')}</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--muted)', marginLeft: '4px' }}>
+                {speechLang === 'ml-IN' ? '(Sarvam AI വഴി വിവർത്തനം ചെയ്യും)' : '(Translates via Sarvam AI)'}
+              </span>
             </div>
 
             <button
@@ -490,7 +399,7 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
               style={{ marginTop: '16px', width: '100%', padding: '12px' }}
             >
               <CheckCircle2 size={16} />
-              <span>{speechLang === 'ml-IN' ? 'സംസാരം പൂർത്തിയായി (Done Speaking)' : 'Done Speaking — Proceed'}</span>
+              <span>{speechLang === 'ml-IN' ? 'സംസാരം പൂർത്തിയായി (Done Speaking — Translate)' : 'Done Speaking — Translate'}</span>
             </button>
           </div>
         )}
@@ -498,31 +407,79 @@ export const VoiceModal: React.FC<VoiceModalProps> = ({
         {/* ── PHASE 3 & 4: REVIEW & EXECUTION ── */}
         {(phase === 'review' || phase === 'executing') && (
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' }}>
-              {speechLang === 'ml-IN' ? 'തിരിച്ചറിഞ്ഞ ശബ്ദ നിർദ്ദേശം (തിരുത്താം)' : 'Recognized Voice Command (Editable)'}
-            </label>
-
-            {/* Editable textarea so merchant can tweak words or numbers */}
-            <textarea
-              value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
-              disabled={phase === 'executing'}
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
+            {isTranscribing ? (
+              <div style={{
+                padding: '36px 16px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
                 borderRadius: '12px',
-                border: '1px solid var(--line)',
-                background: 'var(--surface)',
-                color: 'var(--ink)',
-                fontSize: '1rem',
-                lineHeight: 1.5,
-                resize: 'none',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-              placeholder="e.g. Add 15 kg tomato at ₹40"
-            />
+                background: 'var(--tint)',
+                border: '1px solid var(--line)'
+              }}>
+                <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} color="var(--accent)" />
+                <div>
+                  <p style={{ fontWeight: 700, color: 'var(--ink)', fontSize: '0.98rem', margin: '0 0 4px' }}>
+                    {speechLang === 'ml-IN' 
+                      ? 'Sarvam AI മലയാളം ശബ്ദം ഇംഗ്ലീഷിലേക്ക് മാറ്റുന്നു…' 
+                      : 'Transcribing & translating via Sarvam AI…'}
+                  </p>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                    POST https://api.sarvam.ai/speech-to-text-translate (saaras:v2.5)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>
+                    {speechLang === 'ml-IN' ? 'തിരിച്ചറിഞ്ഞ ഇംഗ്ലീഷ് കമാൻഡ് (English Translation)' : 'Recognized English Command (Editable)'}
+                  </label>
+                  {detectedEngine && (
+                    <span style={{
+                      fontSize: '0.74rem',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      background: 'rgba(63, 122, 92, 0.1)',
+                      color: 'var(--accent-d)',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <Sparkles size={12} />
+                      {detectedLangCode || 'ml-IN'} → EN
+                      {transcriptionConfidence ? ` (${transcriptionConfidence}%)` : ''}
+                    </span>
+                  )}
+                </div>
+
+                {/* Editable textarea so merchant can tweak words or numbers */}
+                <textarea
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                  disabled={phase === 'executing'}
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--line)',
+                    background: 'var(--surface)',
+                    color: 'var(--ink)',
+                    fontSize: '1rem',
+                    lineHeight: 1.5,
+                    resize: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="e.g. Add 15 kg tomato at ₹40"
+                />
+              </div>
+            )}
+
 
             {/* Success execution badge */}
             {executionResult && (

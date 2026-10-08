@@ -93,17 +93,17 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
       } else {
         resultItem = store.addInventoryItem({
           name: validated.productName,
-          nameMl: validated.productName,
-          category: 'General',
-          categoryMl: 'സാധാരണ',
+          nameMl: validated.productNameMl || validated.productName,
+          category: validated.category || 'General',
+          categoryMl: validated.categoryMl || 'സാധാരണ',
           currentStock: validated.quantity,
           unit: validated.unit || 'kg',
           reorderLevel: 10,
           unitPrice: validated.pricePerUnit || 50,
           costPrice: (validated.pricePerUnit || 50) * 0.8
         });
-        summary = `Created new inventory item ${resultItem.name} with ${resultItem.currentStock} ${resultItem.unit} at ₹${resultItem.unitPrice}/${resultItem.unit}.`;
-        summaryMl = `പുതിയ സാധനം ${resultItem.name} സ്റ്റോക്കിൽ ചേർത്തു: ${resultItem.currentStock} ${resultItem.unit}, വില ₹${resultItem.unitPrice}/${resultItem.unit}.`;
+        summary = `Created new inventory item "${resultItem.name}" with ${resultItem.currentStock} ${resultItem.unit}${resultItem.unitPrice ? ` at ₹${resultItem.unitPrice}/${resultItem.unit}` : ''}.`;
+        summaryMl = `പുതിയ സാധനം "${resultItem.nameMl || resultItem.name}" സ്റ്റോക്കിൽ ചേർത്തു: ${resultItem.currentStock} ${resultItem.unit}${resultItem.unitPrice ? `, വില ₹${resultItem.unitPrice}/${resultItem.unit}` : ''}.`;
       }
 
       // Persist inventory update to PostgreSQL database
@@ -115,21 +115,43 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
       try {
         const business = await resolveOrCreateBusiness(params.merchantPhone, params.businessId);
 
-        const nameWords = validated.productName.trim().split(/\s+/).filter(w => w.length > 2);
-        const searchWord = nameWords[0] || validated.productName.trim();
+        const trimmedName = validated.productName.trim();
+        const lowerName = trimmedName.toLowerCase();
 
-        // Match existing item in DB by English or Malayalam name
-        const dbExisting = await prisma.inventoryItem.findFirst({
+        // 1. Exact match in DB by English or Malayalam name
+        let dbExisting = await prisma.inventoryItem.findFirst({
           where: {
             businessId: business.id,
             OR: [
-              { name: { contains: searchWord, mode: 'insensitive' } },
-              { nameMl: { contains: searchWord, mode: 'insensitive' } },
-              { name: { contains: validated.productName.trim(), mode: 'insensitive' } },
-              { nameMl: { contains: validated.productName.trim(), mode: 'insensitive' } }
+              { name: { equals: trimmedName, mode: 'insensitive' } },
+              { nameMl: { equals: trimmedName, mode: 'insensitive' } }
             ]
           }
         });
+
+        // 2. Discriminative match: variety qualifiers must not conflict
+        if (!dbExisting) {
+          const allBusinessItems = await prisma.inventoryItem.findMany({
+            where: { businessId: business.id }
+          });
+
+          const varietyQualifiers = [
+            'basmati', 'jeerakasala', 'matta', 'ponni', 'sona masoori', 'pachari',
+            'coconut', 'sunflower', 'mustard', 'sesame',
+            'black', 'green', 'white', 'red',
+            'powder', 'seeds', 'whole', 'flour', 'atta', 'maida',
+            'tomato', 'onion', 'potato', 'ginger', 'garlic', 'sugar', 'salt'
+          ];
+
+          dbExisting = allBusinessItems.find(item => {
+            const e = item.name.toLowerCase();
+            const eMl = item.nameMl.toLowerCase();
+            for (const v of varietyQualifiers) {
+              if (e.includes(v) !== lowerName.includes(v)) return false;
+            }
+            return e.includes(lowerName) || lowerName.includes(e) || eMl.includes(lowerName) || lowerName.includes(eMl);
+          }) || null;
+        }
 
         if (dbExisting) {
           const newDbStock = dbExisting.currentStock + validated.quantity;
@@ -163,7 +185,8 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
               unit: resultItem.unit || 'kg',
               reorderLevel: resultItem.reorderLevel || 10,
               unitPrice: resultItem.unitPrice || 50,
-              costPrice: resultItem.costPrice || 40
+              costPrice: resultItem.costPrice || 40,
+              lastRestocked: new Date()
             }
           });
           dbStatus = {
@@ -174,7 +197,7 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
             itemId: createdDb.id,
             action: 'created'
           };
-          console.log(`[PostgreSQL SUCCESS] Created new item "${createdDb.name}" (Stock: ${createdDb.currentStock}) in business "${business.businessName}" (ID: ${business.id})`);
+          console.log(`[PostgreSQL SUCCESS] Created new item "${createdDb.name}" (Stock: ${createdDb.currentStock}, Price: ₹${createdDb.unitPrice}/${createdDb.unit}) in business "${business.businessName}" (ID: ${business.id})`);
         }
       } catch (dbErr: any) {
         const errorMsg = dbErr?.message || String(dbErr);
@@ -202,6 +225,8 @@ export const agentTools: Record<AgentToolType, (params: any) => Promise<ToolExec
         data: {
           ...resultItem,
           previousUnitPrice,
+          // Use dbStatus as single source of truth: in-memory store may be stale after restart
+          isNewItem: dbStatus.action === 'created',
           dbStatus,
           databaseError: dbStatus.error
         },

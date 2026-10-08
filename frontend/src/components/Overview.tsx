@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import type { Language, NavTab, StoreProfile } from '../types';
+import React, { useState, useEffect } from 'react';
+import type { Language, NavTab, StoreProfile, AgentTaskLog, InventoryItem } from '../types';
 import { KadaIcon } from './ui';
 import { STORE_PROFILE, INITIAL_AGENT_LOGS } from '../mockData';
+import { getInventory, getAgentLogs } from '../api/client';
 
 interface OverviewProps {
   language: Language;
@@ -16,13 +17,36 @@ export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, 
   const profile = storeProfile || STORE_PROFILE;
   const [autoMode, setAutoMode] = useState(true);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const [liveItems, setLiveItems] = useState<InventoryItem[]>([]);
+  const [recentLogs, setRecentLogs] = useState<AgentTaskLog[]>(INITIAL_AGENT_LOGS);
+
+  useEffect(() => {
+    getInventory().then(items => {
+      if (items && items.length > 0) setLiveItems(items);
+    }).catch(console.warn);
+
+    getAgentLogs().then(logs => {
+      if (logs && logs.length > 0) setRecentLogs(logs);
+    }).catch(console.warn);
+  }, []);
+
+  // Compute low stock items from live inventory
+  const lowStockItems = liveItems.filter(i => i.currentStock <= i.reorderLevel);
+
   const attentionDefs = [
     { id: 'a1', icon: 'i-alert', title: t('Bulk order from Rahul',  'രാഹുലിൽ നിന്ന് ബൾക്ക് ഓർഡർ', lang), sub: t('40 uniforms by the 15th · 10:42', '40 യൂണിഫോം 15 ന് · 10:42', lang), action: t('Reply', 'മറുപടി', lang) },
-    { id: 'a2', icon: 'i-box',   title: t('Rice stock is low',      'അരി സ്റ്റോക്ക് കുറഞ്ഞു',     lang), sub: t('20 kg left, reorder drafted · 09:05', '20 കി.ഗ്രാം ബാക്കി, ഓർഡർ തയ്യാർ · 09:05', lang), action: t('Order', 'ഓർഡർ ചെയ്യൂ', lang) },
+    ...lowStockItems.map(item => ({
+      id: `low-${item.id}`,
+      icon: 'i-box',
+      title: t(`${item.name} is low`, `${item.nameMl || item.name} സ്റ്റോക്ക് കുറഞ്ഞു`, lang),
+      sub: t(`${item.currentStock} ${item.unit} left, reorder drafted`, `${item.currentStock} ${item.unit} ബാക്കി, ഓർഡർ തയ്യാർ`, lang),
+      action: t('Restock', 'സ്റ്റോക്ക് ചേർക്കൂ', lang)
+    }))
   ];
   const attItems = attentionDefs.filter(i => !dismissedIds.includes(i.id));
 
-  const recent = INITIAL_AGENT_LOGS.filter(l => l.status === 'SUCCESS').slice(0, 3);
+  const recent = recentLogs.slice(0, 3);
+
 
   const dismiss = (id: string) => {
     const el = document.getElementById(`att-item-${id}`);

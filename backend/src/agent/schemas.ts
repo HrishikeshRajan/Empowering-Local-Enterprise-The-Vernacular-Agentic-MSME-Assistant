@@ -12,9 +12,14 @@ export const AgentToolEnum = z.enum([
 export const InventoryUpdatePayloadSchema = z.object({
   action: z.enum(['add_stock', 'create_product', 'update_price']),
   productName: z.string().min(1),
+  productNameMl: z.string().optional(),
+  category: z.string().optional(),
+  categoryMl: z.string().optional(),
   quantity: z.number().positive(),
   unit: z.string().default('kg'),
-  pricePerUnit: z.number().positive().optional()
+  pricePerUnit: z.number().positive().optional(),
+  merchantPhone: z.string().optional(),
+  businessId: z.string().optional()
 });
 
 export const WhatsAppSendPayloadSchema = z.object({

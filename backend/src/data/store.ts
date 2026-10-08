@@ -116,10 +116,33 @@ export class InMemoryStore {
 
   public findInventoryByName(name: string): InventoryItem | undefined {
     const query = name.toLowerCase().trim();
-    return this.inventory.find(item => 
-      item.name.toLowerCase().includes(query) || 
-      item.nameMl.toLowerCase().includes(query)
+    if (!query) return undefined;
+
+    // 1. Exact match (English or Malayalam)
+    const exact = this.inventory.find(item => 
+      item.name.toLowerCase() === query || 
+      item.nameMl.toLowerCase() === query
     );
+    if (exact) return exact;
+
+    // 2. Discriminative match: variety qualifiers must not conflict
+    const varietyQualifiers = [
+      'basmati', 'jeerakasala', 'matta', 'ponni', 'sona masoori', 'pachari',
+      'coconut', 'sunflower', 'mustard', 'sesame',
+      'black', 'green', 'white', 'red',
+      'powder', 'seeds', 'whole', 'flour', 'atta', 'maida',
+      'tomato', 'onion', 'potato', 'ginger', 'garlic', 'sugar', 'salt'
+    ];
+
+    return this.inventory.find(item => {
+      const e = item.name.toLowerCase();
+      const eMl = item.nameMl.toLowerCase();
+
+      for (const v of varietyQualifiers) {
+        if (e.includes(v) !== query.includes(v)) return false;
+      }
+      return e.includes(query) || query.includes(e) || eMl.includes(query) || query.includes(eMl);
+    });
   }
 
   public addInventoryItem(item: Omit<InventoryItem, 'id' | 'lastRestocked'> & { id?: string }): InventoryItem {
