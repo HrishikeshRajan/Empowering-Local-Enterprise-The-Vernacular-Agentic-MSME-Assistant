@@ -9,13 +9,21 @@ interface OverviewProps {
   onNavigate: (tab: NavTab) => void;
   onOpenVoiceModal: () => void;
   storeProfile?: StoreProfile;
+  autoMode?: boolean;
+  onToggleAutoMode?: () => void;
 }
 
 const t = (en: string, ml: string, lang: Language) => lang === 'ml' ? ml : en;
 
-export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, onOpenVoiceModal, storeProfile }) => {
+export const Overview: React.FC<OverviewProps> = ({ 
+  language: lang, 
+  onNavigate, 
+  onOpenVoiceModal, 
+  storeProfile,
+  autoMode = true,
+  onToggleAutoMode
+}) => {
   const profile = storeProfile || STORE_PROFILE;
-  const [autoMode, setAutoMode] = useState(true);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [liveItems, setLiveItems] = useState<InventoryItem[]>([]);
   const [recentLogs, setRecentLogs] = useState<AgentTaskLog[]>(INITIAL_AGENT_LOGS);
@@ -47,19 +55,11 @@ export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, 
 
   const recent = recentLogs.slice(0, 3);
 
-
   const dismiss = (id: string) => {
     const el = document.getElementById(`att-item-${id}`);
     if (el) el.classList.add('out');
     setTimeout(() => setDismissedIds(prev => [...prev, id]), 300);
   };
-
-  const agentLabel = autoMode
-    ? t('Kada is handling messages',  'Kada സന്ദേശങ്ങൾ കൈകാര്യം ചെയ്യുന്നു', lang)
-    : t('You are in control',         'നിങ്ങൾ നിയന്ത്രണത്തിലാണ്',              lang);
-  const agentSub = autoMode
-    ? t('Switch off to take control yourself.', 'ഓഫ് ചെയ്‌ത് നിങ്ങൾ ഏറ്റെടുക്കാം.', lang)
-    : t('New messages wait for you.',           'പുതിയ സന്ദേശങ്ങൾ നിങ്ങൾക്കായി കാത്തിരിക്കും.', lang);
 
   const ownerFirst = (profile.owner || 'Merchant').split(' ')[0];
   const ownerGreetingMl = profile.ownerMl || profile.owner || 'സുഹൃത്തേ';
@@ -78,28 +78,83 @@ export const Overview: React.FC<OverviewProps> = ({ language: lang, onNavigate, 
             lang
           )}</p>
         </div>
-        <button className="vbtn" onClick={onOpenVoiceModal}>
-          <KadaIcon id="i-mic" />
-          {t('Speak a command', 'ഒരു കമ്മാൻഡ് പറയൂ', lang)}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          {/* ── Small side toggle matching theme ── */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoMode}
+            onClick={onToggleAutoMode}
+            title={autoMode 
+              ? t('Kada is handling messages. Click to take control.', 'Kada സന്ദേശങ്ങൾ കൈകാര്യം ചെയ്യുന്നു. ഓഫ് ചെയ്യാൻ ക്ലിക്ക് ചെയ്യുക.', lang) 
+              : t('Manual control active. Click to enable Kada Auto.', 'മാനുവൽ മോഡ്. ഓട്ടോ മോഡ് ആക്കാൻ ക്ലിക്ക് ചെയ്യുക.', lang)
+            }
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.35rem 0.65rem',
+              borderRadius: '999px',
+              border: '1px solid var(--line)',
+              background: autoMode ? 'var(--soft)' : 'var(--tint)',
+              color: autoMode ? 'var(--accent-d)' : 'var(--muted)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: autoMode ? 'var(--accent)' : 'var(--amber-t, #97691a)',
+                boxShadow: autoMode ? '0 0 0 2px rgba(44,90,67,0.2)' : 'none',
+                animation: autoMode ? 'pl 1.6s infinite' : 'none'
+              }}
+            />
+            <span>
+              {autoMode 
+                ? t('Kada Auto', 'Kada ഓട്ടോ', lang) 
+                : t('Manual', 'മാനുവൽ', lang)}
+            </span>
+            <span
+              style={{
+                display: 'inline-block',
+                position: 'relative',
+                width: '1.75rem',
+                height: '1rem',
+                borderRadius: '999px',
+                backgroundColor: autoMode ? 'var(--accent)' : 'rgba(0,0,0,0.18)',
+                transition: 'background-color 0.25s ease'
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '1.5px',
+                  left: '2px',
+                  width: '0.75rem',
+                  height: '0.75rem',
+                  borderRadius: '50%',
+                  backgroundColor: '#fff',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                  transform: autoMode ? 'translateX(0.75rem)' : 'translateX(0rem)',
+                  transition: 'transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1)'
+                }}
+              />
+            </span>
+          </button>
+
+          <button className="vbtn" onClick={onOpenVoiceModal}>
+            <KadaIcon id="i-mic" />
+            {t('Speak a command', 'ഒരു കമ്മാൻഡ് പറയൂ', lang)}
+          </button>
+        </div>
       </header>
 
       <div className="grid">
-
-        {/* ── Hero: agent toggle ── */}
-        <div className={`g-hero${autoMode ? '' : ' man'}`}>
-          <div className="t">
-            <b><span className="pulse" aria-hidden="true" />{agentLabel}</b>
-            <small>{agentSub}</small>
-          </div>
-          <button
-            className="sw"
-            role="switch"
-            aria-checked={autoMode}
-            aria-label={t('Auto mode', 'ഓട്ടോ മോഡ്', lang)}
-            onClick={() => setAutoMode(v => !v)}
-          />
-        </div>
 
         {/* ── Stat tiles ── */}
         <div className="tiles g-tiles">

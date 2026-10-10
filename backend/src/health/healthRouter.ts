@@ -23,8 +23,8 @@ healthRouter.get('/', (_req: Request, res: Response) => {
       latencyMs: 142
     },
     llmEngine: {
-      primary: 'Gemini 2.0 Flash',
-      fallback: 'Groq Llama 3.3 70B',
+      primary: 'Sarvam AI (sarvam-105b)',
+      fallback: 'Deterministic Vernacular Catalog Engine',
       status: 'connected'
     },
     database: {

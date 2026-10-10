@@ -39,6 +39,9 @@ export interface AgentTaskLog {
   steps: AgentExecutionStep[];
   outputSummary: string;
   outputSummaryMl: string;
+  needsHumanReview?: boolean;
+  reviewReason?: string;
+  dataSnapshot?: any;
 }
 
 export interface InvoiceItem {

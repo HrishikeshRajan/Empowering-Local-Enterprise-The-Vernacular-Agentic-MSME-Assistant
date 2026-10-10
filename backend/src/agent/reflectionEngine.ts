@@ -8,6 +8,11 @@ import type {
 import { CONFIDENCE_THRESHOLD_REVIEW, MAX_PRICE_DEVIATION_PERCENT } from '@msme/shared';
 import { agentTools, type ToolExecutionResponse } from './tools.js';
 import { store } from '../data/store.js';
+import { 
+  parseIntentWithSarvamLlm, 
+  critiqueWithSarvamLlm, 
+  isSarvamLlmConfigured 
+} from './sarvamLlm.js';
 
 interface ReflectionLoopResult {
   taskLog: AgentTaskLog;
@@ -529,6 +534,40 @@ export class ReflectionEngine {
     explanation: string;
     explanationMl: string;
   }> {
+    // 1. Try Sarvam AI LLM (sarvam-105b) for natural vernacular understanding
+    if (isSarvamLlmConfigured()) {
+      try {
+        const sarvamIntent = await parseIntentWithSarvamLlm(input, attempt, merchantContext);
+        if (sarvamIntent) {
+          // If product was extracted, canonicalize using COMMODITY_CATALOG if matched
+          if (sarvamIntent.tool === 'db_write' && sarvamIntent.params?.productName) {
+            const canonical = this.extractCommodity(sarvamIntent.params.productName, input);
+            if (canonical.isMatched) {
+              sarvamIntent.params.productName = canonical.name;
+              sarvamIntent.params.productNameMl = canonical.nameMl;
+              sarvamIntent.params.category = canonical.category;
+              sarvamIntent.params.categoryMl = canonical.categoryMl;
+              if (!sarvamIntent.params.unit) {
+                sarvamIntent.params.unit = canonical.defaultUnit;
+              }
+            }
+          }
+
+          console.log(`[Reflection Engine] Sarvam-105B LLM parsed intent: tool=${sarvamIntent.tool}, conf=${sarvamIntent.confidence}%`);
+          return {
+            tool: sarvamIntent.tool,
+            params: sarvamIntent.params,
+            confidence: sarvamIntent.confidence,
+            explanation: sarvamIntent.explanation,
+            explanationMl: sarvamIntent.explanationMl
+          };
+        }
+      } catch (llmErr) {
+        console.warn('[Reflection Engine] Sarvam LLM error, falling back to deterministic catalog:', llmErr);
+      }
+    }
+
+    // 2. Fallback to deterministic regex & catalog pattern matching
     const rawLower = input.toLowerCase();
     const text = this.normalizeSpokenNumbers(rawLower);
 
@@ -718,15 +757,16 @@ export class ReflectionEngine {
   /**
    * 2. CRITIQUE OUTPUT (Critique Step)
    * Validates against guardrails: financial precision, positive quantities, price fluctuations, and DB persistence
+   * Leverages Sarvam-105B LLM critique with programmatic safety invariant enforcement
    */
-  private critique(tool: AgentToolType, params: any, result: ToolExecutionResponse): {
+  private async critique(tool: AgentToolType, params: any, result: ToolExecutionResponse): Promise<{
     isValid: boolean;
     confidence: number;
     reason?: string;
     critiqueNotes: string;
     critiqueNotesMl: string;
     guardrailPassed: boolean;
-  } {
+  }> {
     if (!result.success) {
       const errorMsg = result.error || 'Tool execution returned failure';
       return {
@@ -784,6 +824,28 @@ export class ReflectionEngine {
         critiqueNotesMl: 'സാമ്പത്തിക സുരക്ഷാ പരിശോധന: പണമടയ്ക്കാനുള്ള തുക ശരിയല്ല.',
         guardrailPassed: false
       };
+    }
+
+    // If programmatic checks passed and Sarvam LLM is available, consult Sarvam-105B for secondary critique
+    if (isSarvamLlmConfigured()) {
+      try {
+        const prevPrice = tool === 'db_write' 
+          ? (result.data?.previousUnitPrice || store.findInventoryByName(params.productName)?.unitPrice)
+          : undefined;
+        const llmCritique = await critiqueWithSarvamLlm(tool, params, result, prevPrice);
+        if (llmCritique && !llmCritique.isValid) {
+          return {
+            isValid: false,
+            confidence: llmCritique.confidence || 65,
+            reason: llmCritique.reason || 'Flagged by Sarvam AI safety critique',
+            critiqueNotes: `Sarvam LLM Guardrail: ${llmCritique.reason || llmCritique.critiqueNotes}`,
+            critiqueNotesMl: `സർവം AI സുരക്ഷാ പരിശോധന: ${llmCritique.reason || llmCritique.critiqueNotes}`,
+            guardrailPassed: false
+          };
+        }
+      } catch (critiqueErr) {
+        console.warn('[Reflection Engine] Sarvam LLM critique error, relying on programmatic checks:', critiqueErr);
+      }
     }
 
     return {
@@ -881,7 +943,7 @@ export class ReflectionEngine {
 
       // --- 3. CRITIQUE ---
       const critiqueStart = Date.now();
-      const critiqueResult = this.critique(intent.tool, intent.params, toolResult);
+      const critiqueResult = await this.critique(intent.tool, intent.params, toolResult);
       const critiqueDuration = Date.now() - critiqueStart;
 
       steps.push({

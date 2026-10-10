@@ -64,6 +64,25 @@ export function App() {
       localStorage.setItem('kada_language', lang);
     } catch {}
   };
+  const [autoMode, setAutoMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('kada_auto_mode');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleAutoMode = () => {
+    setAutoMode(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('kada_auto_mode', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [storeProfile, setStoreProfile] = useState<StoreProfile>(() => {
     try {
@@ -270,6 +289,8 @@ export function App() {
           storeProfile={storeProfile}
           onLogout={handleLogout}
           onLanguageChange={handleLanguageChange}
+          autoMode={autoMode}
+          onToggleAutoMode={handleToggleAutoMode}
         />
 
         {/* Main column */}
@@ -292,6 +313,8 @@ export function App() {
                 onNavigate={setCurrentTab}
                 onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
                 storeProfile={storeProfile}
+                autoMode={autoMode}
+                onToggleAutoMode={handleToggleAutoMode}
               />
             )}
             {currentTab === 'whatsapp' && <WhatsAppHub language={language} />}

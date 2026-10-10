@@ -12,6 +12,8 @@ interface SidebarProps {
   storeProfile?: StoreProfile;
   onLogout?: () => void;
   onLanguageChange?: (lang: Language) => void;
+  autoMode?: boolean;
+  onToggleAutoMode?: () => void;
 }
 
 const NAV: { id: NavTab; labelEn: string; labelMl: string; icon: string }[] = [
@@ -24,7 +26,17 @@ const NAV: { id: NavTab; labelEn: string; labelMl: string; icon: string }[] = [
   { id: 'settings',     labelEn: 'Setup',       labelMl: 'ക്രമീകരണം',   icon: 'i-set'   },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange, language, onBackToLanding, storeProfile, onLogout, onLanguageChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  currentTab, 
+  onTabChange, 
+  language, 
+  onBackToLanding, 
+  storeProfile, 
+  onLogout, 
+  onLanguageChange,
+  autoMode = true,
+  onToggleAutoMode
+}) => {
   const profile = storeProfile || STORE_PROFILE;
   const initials = (profile.owner || 'Kada').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'KD';
   const shopLocation = profile.location ? (profile.location.split(',')[1]?.trim() || profile.location.split(',')[0]) : 'Kerala';
@@ -48,6 +60,99 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange, langu
           </a>
         ))}
       </nav>
+
+      {/* ── Compact Kada Auto Mode Toggle (Theme-aligned) ── */}
+      <div 
+        className="sidebar-agent-toggle"
+        style={{
+          marginTop: 'auto',
+          marginBottom: '0.65rem',
+          padding: '0.6rem 0.8rem',
+          borderRadius: '1rem',
+          background: autoMode ? 'var(--soft)' : 'var(--tint)',
+          border: '1px solid var(--line)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          transition: 'all 0.25s ease'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+          <span 
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: autoMode ? 'var(--accent)' : 'var(--amber-t, #97691a)',
+              boxShadow: autoMode ? '0 0 0 3px rgba(44,90,67,0.2)' : 'none',
+              animation: autoMode ? 'pl 1.6s infinite' : 'none',
+              flexShrink: 0
+            }}
+          />
+          <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+            <span style={{ 
+              display: 'block', 
+              fontSize: '0.78rem', 
+              fontWeight: 700, 
+              color: 'var(--ink)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {autoMode 
+                ? (language === 'ml' ? 'Kada ഓട്ടോ' : 'Kada Auto')
+                : (language === 'ml' ? 'മാനുവൽ' : 'Manual')
+              }
+            </span>
+            <span style={{ 
+              display: 'block', 
+              fontSize: '0.68rem', 
+              color: 'var(--muted)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {autoMode 
+                ? (language === 'ml' ? 'സന്ദേശങ്ങൾ നോക്കുന്നു' : 'Handling msgs') 
+                : (language === 'ml' ? 'സ്വയം നിയന്ത്രിക്കുക' : 'You in control')}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={autoMode}
+          aria-label={language === 'ml' ? 'ഓട്ടോ മോഡ് മാറ്റുക' : 'Toggle auto mode'}
+          onClick={onToggleAutoMode}
+          style={{
+            position: 'relative',
+            width: '2.5rem',
+            height: '1.4rem',
+            borderRadius: '999px',
+            backgroundColor: autoMode ? 'var(--accent)' : 'rgba(0,0,0,0.18)',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px',
+            flexShrink: 0,
+            transition: 'background-color 0.25s ease'
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              width: '1.1rem',
+              height: '1.1rem',
+              borderRadius: '50%',
+              backgroundColor: '#fff',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+              transform: autoMode ? 'translateX(1.1rem)' : 'translateX(0rem)',
+              transition: 'transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1)'
+            }}
+          />
+        </button>
+      </div>
 
       <div className="shop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

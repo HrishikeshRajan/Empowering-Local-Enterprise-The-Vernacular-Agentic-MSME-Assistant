@@ -215,9 +215,9 @@ export interface SystemHealthStatus {
     latencyMs: number;
   };
   llmEngine: {
-    primary: 'Gemini 2.0 Flash';
-    fallback: 'Groq Llama 3.3 70B';
-    status: 'connected';
+    primary: string;
+    fallback: string;
+    status: 'connected' | 'disconnected' | 'degraded';
   };
   database: {
     type: 'PostgreSQL + pgvector';

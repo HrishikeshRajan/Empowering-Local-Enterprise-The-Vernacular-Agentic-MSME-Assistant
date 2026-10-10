@@ -36,9 +36,10 @@ flowchart TD
     end
 
     subgraph AgentEngine ["3. Agentic Reflection Engine"]
-        G --> H["normalizeSpokenNumbers() (മുപ്പത് -> 30, പത്ത് -> 10)"]
-        H --> I["extractCommodity() via COMMODITY_CATALOG + vernacularPattern()"]
-        I --> J["generateIntent() -> db_write Tool Intent"]
+        G --> H["Sarvam AI LLM (sarvam-105b) Intent Extraction"]
+        H -->|Fallback if Offline| I["COMMODITY_CATALOG + normalizeSpokenNumbers()"]
+        H --> J["generateIntent() -> db_write Tool Intent"]
+        I --> J
         J --> K{"First Attempt Mutation?"}
         K -->|Attempt 0| L["agentTools.db_write()"]
         K -->|Attempt >0| M["Return Cached Result (Idempotency Guard)"]
